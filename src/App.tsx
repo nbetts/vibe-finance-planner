@@ -39,7 +39,7 @@ function App() {
 
   return (
     <div className="salary-planner-container">
-      <h1>UK Salary Planner 2025/26</h1>
+      <h1>UK Salary Planner</h1>
       <form
         className="salary-input"
         onSubmit={e => {
@@ -48,31 +48,32 @@ function App() {
         }}
         autoComplete="off"
       >
-        <label htmlFor="taxYear">Tax Year: </label>
-        <select
-          id="taxYear"
-          value={taxYearKey}
-          onChange={e => setTaxYearKey(e.target.value)}
-        >
-          {Object.entries(TAX_YEARS).map(([key, config]) => (
-            <option key={key} value={key}>{config.yearLabel}</option>
-          ))}
-        </select>
-        {' '}
-        <label htmlFor="salary">Annual Salary (£): </label>
-        <input
-          id="salary"
-          type="number"
-          min="0"
-          value={salary}
-          onChange={e => setSalary(e.target.value)}
-          placeholder="e.g. 40000"
-        />
-        <button type="submit">Calculate</button>
+        <div className="salary-input-row">
+          <label htmlFor="taxYear">Tax Year: </label>
+          <select
+            id="taxYear"
+            value={taxYearKey}
+            onChange={e => setTaxYearKey(e.target.value)}
+          >
+            {Object.entries(TAX_YEARS).map(([key, config]) => (
+              <option key={key} value={key}>{config.yearLabel}</option>
+            ))}
+          </select>
+          <label htmlFor="salary">Annual Salary (£): </label>
+          <input
+            id="salary"
+            type="number"
+            min="0"
+            value={salary}
+            onChange={e => setSalary(e.target.value)}
+            placeholder="e.g. 40000"
+          />
+          <button type="submit">Calculate</button>
+        </div>
       </form>
       {breakdown && (
         <div className="breakdown">
-          <h2>Breakdown</h2>
+          <h2>Salary Breakdown</h2>
           <table>
             <thead>
               <tr>
