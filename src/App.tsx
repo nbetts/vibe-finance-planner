@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useLocalStorage } from './hooks';
 import './App.css';
 import { calculateBreakdown } from './salaryCalculations';
+import { TAX_YEARS } from './constants';
+import type { TaxYearConfig } from './types';
 import type { SalaryBreakdown } from './types';
 
 
@@ -11,6 +13,8 @@ function App() {
   const [salary, setSalary] = useLocalStorage<string>('salary', '');
   // (localStorage logic handled by useLocalStorage hook)
   const [breakdown, setBreakdown] = useState<SalaryBreakdown | null>(null);
+  const [taxYearKey, setTaxYearKey] = useState<string>('2025_26');
+  const taxYearConfig: TaxYearConfig = TAX_YEARS[taxYearKey];
 
   // All constants imported from constants.ts
 
@@ -21,17 +25,17 @@ function App() {
       setBreakdown(null);
       return;
     }
-    setBreakdown(calculateBreakdown(gross));
+    setBreakdown(calculateBreakdown(gross, taxYearConfig));
   };
 
   // Auto-run calculation only on initial load if salary exists
+  // Recalculate on mount or when tax year changes (if salary exists)
   useEffect(() => {
     if (salary && !isNaN(Number(salary)) && Number(salary) > 0) {
-      setBreakdown(calculateBreakdown(Number(salary)));
+      setBreakdown(calculateBreakdown(Number(salary), taxYearConfig));
     }
-    // do not run on salary change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [taxYearKey]);
 
   return (
     <div className="salary-planner-container">
@@ -44,6 +48,17 @@ function App() {
         }}
         autoComplete="off"
       >
+        <label htmlFor="taxYear">Tax Year: </label>
+        <select
+          id="taxYear"
+          value={taxYearKey}
+          onChange={e => setTaxYearKey(e.target.value)}
+        >
+          {Object.entries(TAX_YEARS).map(([key, config]) => (
+            <option key={key} value={key}>{config.yearLabel}</option>
+          ))}
+        </select>
+        {' '}
         <label htmlFor="salary">Annual Salary (£): </label>
         <input
           id="salary"

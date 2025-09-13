@@ -1,30 +1,20 @@
 // src/salaryCalculations.ts
 
 import {
-  PERSONAL_ALLOWANCE,
-  PERSONAL_ALLOWANCE_TAPER_THRESHOLD,
-  BASIC_RATE_LIMIT,
-  HIGHER_RATE_LIMIT,
-  BASIC_RATE,
-  HIGHER_RATE,
-  ADDITIONAL_RATE,
-  NI_BANDS,
-  STUDENT_LOAN_THRESHOLD,
-  STUDENT_LOAN_RATE,
-  PENSION_RATE,
   MONTHS_PER_YEAR,
   WEEKS_PER_YEAR,
   WORKDAYS_PER_YEAR,
 } from './constants';
+import type { TaxYearConfig } from './types';
 import type { SalaryBreakdown, TaxBreakdown } from './types';
 
-export function calculateBreakdown(gross: number): SalaryBreakdown {
-  const pension = gross * PENSION_RATE;
+export function calculateBreakdown(gross: number, config: TaxYearConfig): SalaryBreakdown {
+  const pension = gross * config.PENSION_RATE;
   const extraSalarySacrifice = 0; // No extra salary sacrifice in current calculation
   const totalSalarySacrifice = pension + extraSalarySacrifice;
-  let personalAllowance = PERSONAL_ALLOWANCE;
-  if (gross > PERSONAL_ALLOWANCE_TAPER_THRESHOLD) {
-    personalAllowance = Math.max(0, PERSONAL_ALLOWANCE - Math.floor((gross - PERSONAL_ALLOWANCE_TAPER_THRESHOLD) / 2));
+  let personalAllowance = config.PERSONAL_ALLOWANCE;
+  if (gross > config.PERSONAL_ALLOWANCE_TAPER_THRESHOLD) {
+    personalAllowance = Math.max(0, config.PERSONAL_ALLOWANCE - Math.floor((gross - config.PERSONAL_ALLOWANCE_TAPER_THRESHOLD) / 2));
   }
   const postSacrificeIncome = gross - totalSalarySacrifice;
   const taxableIncome = Math.max(0, postSacrificeIncome - personalAllowance);
@@ -39,28 +29,28 @@ export function calculateBreakdown(gross: number): SalaryBreakdown {
   remaining -= paTaxed;
   // Basic
   if (remaining > 0) {
-    const basicBand = Math.min(BASIC_RATE_LIMIT - personalAllowance, remaining);
-    taxBreakdown.basic = basicBand * BASIC_RATE;
+    const basicBand = Math.min(config.BASIC_RATE_LIMIT - personalAllowance, remaining);
+    taxBreakdown.basic = basicBand * config.BASIC_RATE;
     tax += taxBreakdown.basic;
     remaining -= basicBand;
   }
   // Higher
   if (remaining > 0) {
-    const higherBand = Math.min(HIGHER_RATE_LIMIT - BASIC_RATE_LIMIT, remaining);
-    taxBreakdown.higher = higherBand * HIGHER_RATE;
+    const higherBand = Math.min(config.HIGHER_RATE_LIMIT - config.BASIC_RATE_LIMIT, remaining);
+    taxBreakdown.higher = higherBand * config.HIGHER_RATE;
     tax += taxBreakdown.higher;
     remaining -= higherBand;
   }
   // Additional
   if (remaining > 0) {
-    taxBreakdown.additional = remaining * ADDITIONAL_RATE;
+    taxBreakdown.additional = remaining * config.ADDITIONAL_RATE;
     tax += taxBreakdown.additional;
   }
 
   // National Insurance
   let ni = 0;
   const niRemaining = gross - totalSalarySacrifice;
-  for (const band of NI_BANDS) {
+  for (const band of config.NI_BANDS) {
     if (niRemaining > band.threshold) {
       const upper = Math.min(band.limit, niRemaining);
       const bandAmount = Math.max(0, upper - band.threshold);
@@ -70,8 +60,8 @@ export function calculateBreakdown(gross: number): SalaryBreakdown {
 
   // Student Loan Plan 2
   const studentLoanIncome = gross - totalSalarySacrifice;
-  const studentLoan = studentLoanIncome > STUDENT_LOAN_THRESHOLD
-    ? (studentLoanIncome - STUDENT_LOAN_THRESHOLD) * STUDENT_LOAN_RATE
+  const studentLoan = studentLoanIncome > config.STUDENT_LOAN_THRESHOLD
+    ? (studentLoanIncome - config.STUDENT_LOAN_THRESHOLD) * config.STUDENT_LOAN_RATE
     : 0;
 
   // Take-home
