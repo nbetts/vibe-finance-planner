@@ -71,7 +71,12 @@ export default function CarFinancePlanner() {
     setActiveTab(newCars.length - 1); // focus new tab
   };
   const handleDeleteTab = (idx: number) => {
-    if (cars.length === 1) return;
+    if (cars.length === 1) {
+      // Reset the only tab
+      const newCars = cars.map((car, i) => i === idx ? createBlankCar(car.label) : car);
+      setCars(newCars);
+      return;
+    }
     const newCars = cars.filter((_, i) => i !== idx);
     setCars(newCars);
     setActiveTab(idx > 0 ? idx - 1 : 0);
@@ -129,21 +134,42 @@ export default function CarFinancePlanner() {
             onKeyDown={e => {
               if ((e.key === 'Enter' || e.key === ' ') && activeTab !== idx) setActiveTab(idx);
             }}
+            draggable
+            onDragStart={e => {
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/plain', String(idx));
+            }}
+            onDragOver={e => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+            }}
+            onDrop={e => {
+              e.preventDefault();
+              const fromIdx = Number(e.dataTransfer.getData('text/plain'));
+              if (fromIdx === idx || isNaN(fromIdx)) return;
+              const newCars = [...cars];
+              const [moved] = newCars.splice(fromIdx, 1);
+              newCars.splice(idx, 0, moved);
+              setCars(newCars as CarTab[]);
+              // Update activeTab if needed
+              if (activeTab === fromIdx) setActiveTab(idx);
+              else if (activeTab > fromIdx && activeTab <= idx) setActiveTab(activeTab - 1);
+              else if (activeTab < fromIdx && activeTab >= idx) setActiveTab(activeTab + 1);
+            }}
+            style={{ cursor: 'grab' }}
           >
             <span className="car-tab-label" style={{ fontWeight: idx === activeTab ? 700 : 400 }}>
               {car.label}
             </span>
-            {cars.length > 1 && idx !== 0 && (
-              <button
-                type="button"
-                className="delete-tab-btn"
-                aria-label="Delete tab"
-                onClick={e => { e.stopPropagation(); handleDeleteTab(idx); }}
-                tabIndex={-1}
-              >
-                ×
-              </button>
-            )}
+            <button
+              type="button"
+              className="delete-tab-btn"
+              aria-label="Delete tab"
+              onClick={e => { e.stopPropagation(); handleDeleteTab(idx); }}
+              tabIndex={-1}
+            >
+              ×
+            </button>
           </div>
         ))}
         <button type="button" aria-label="Add car" className="add-tab-btn" onClick={handleAddTab}>+</button>
