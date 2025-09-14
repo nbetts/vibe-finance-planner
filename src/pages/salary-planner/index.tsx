@@ -55,7 +55,7 @@ function SalaryPlanner() {
         autoComplete="off"
       >
         <div className="salary-input-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.7rem' }}>
-          <label htmlFor="taxYear">Tax Year: </label>
+          <label htmlFor="taxYear">Tax Year</label>
           <select
             id="taxYear"
             value={taxYearKey}
@@ -65,7 +65,7 @@ function SalaryPlanner() {
               <option key={key} value={key}>{config.yearLabel}</option>
             ))}
           </select>
-          <label htmlFor="salary">Annual Salary (£): </label>
+          <label htmlFor="salary">Annual Salary (£)</label>
           <input
             id="salary"
             type="number"
@@ -83,7 +83,7 @@ function SalaryPlanner() {
             />
             Include Student Loan (Plan 2)
           </label>
-          <label htmlFor="pensionPercent">Pension % (salary sacrifice): </label>
+          <label htmlFor="pensionPercent">Pension % (salary sacrifice)</label>
           <input
             id="pensionPercent"
             type="number"
