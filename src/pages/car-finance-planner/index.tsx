@@ -1,5 +1,3 @@
-
-
 import { useState } from 'react';
 import { useLocalStorage } from '../../hooks';
 import { calculateCarFinanceBreakdown } from './carFinanceCalculations';
@@ -10,8 +8,11 @@ import { Link } from 'react-router-dom';
 export default function CarFinancePlanner() {
   const [finance, setFinance] = useLocalStorage<string>('carFinance.finance', '');
   const [financeUnit, setFinanceUnit] = useLocalStorage<'year' | 'month'>('carFinance.financeUnit', 'year');
-  const [fuel, setFuel] = useLocalStorage<string>('carFinance.fuel', '');
-  const [fuelUnit, setFuelUnit] = useLocalStorage<'year' | 'month'>('carFinance.fuelUnit', 'year');
+  const [mileage, setMileage] = useLocalStorage<string>('carFinance.mileage', '12000');
+  const [mileageUnit, setMileageUnit] = useLocalStorage<'year' | 'month'>('carFinance.mileageUnit', 'year');
+  const [fuelType, setFuelType] = useLocalStorage<'unleaded' | 'electric'>('carFinance.fuelType', 'unleaded');
+  const [fuelCost, setFuelCost] = useLocalStorage<string>('carFinance.fuelCost', fuelType === 'unleaded' ? '135' : '8.5');
+  const [fuelEfficiency, setFuelEfficiency] = useLocalStorage<string>('carFinance.fuelEfficiency', fuelType === 'unleaded' ? '40' : '3.5');
   const [roadTax, setRoadTax] = useLocalStorage<string>('carFinance.roadTax', '');
   const [roadTaxUnit, setRoadTaxUnit] = useLocalStorage<'year' | 'month'>('carFinance.roadTaxUnit', 'year');
   const [servicing, setServicing] = useLocalStorage<string>('carFinance.servicing', '');
@@ -31,10 +32,14 @@ export default function CarFinancePlanner() {
     const toYearly = (val: string, unit: 'year' | 'month') => unit === 'month' ? parse(val) * MONTHS_PER_YEAR : parse(val);
     const breakdown = calculateCarFinanceBreakdown({
       finance: String(toYearly(finance, financeUnit)),
-      fuel: String(toYearly(fuel, fuelUnit)),
       roadTax: String(toYearly(roadTax, roadTaxUnit)),
       servicing: String(toYearly(servicing, servicingUnit)),
       insurance: String(toYearly(insurance, insuranceUnit)),
+      mileage,
+      mileageUnit,
+      fuelType,
+      fuelCost,
+      fuelEfficiency,
     });
     setResult(breakdown);
     setShowResult(true);
@@ -43,8 +48,11 @@ export default function CarFinancePlanner() {
   const handleReset = () => {
     setFinance('');
     setFinanceUnit('year');
-    setFuel('');
-    setFuelUnit('year');
+    setMileage('12000');
+    setMileageUnit('year');
+    setFuelType('unleaded');
+    setFuelCost('135');
+    setFuelEfficiency('40');
     setRoadTax('');
     setRoadTaxUnit('year');
     setServicing('');
@@ -78,20 +86,64 @@ export default function CarFinancePlanner() {
               {financeUnit === 'year' ? 'Yearly' : 'Monthly'}
             </button>
           </div>
-          <label htmlFor="fuel">Fuel (£/{fuelUnit}):</label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <label htmlFor="mileage">Mileage (miles/{mileageUnit}):</label>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
             <input
-              id="fuel"
+              id="mileage"
               type="number"
               min="0"
-              value={fuel}
-              onChange={e => setFuel(e.target.value)}
-              placeholder="e.g. 1800"
+              value={mileage}
+              onChange={e => setMileage(e.target.value)}
+              placeholder="e.g. 12000"
               style={{ flex: 1 }}
             />
-            <button type="button" aria-label="Toggle fuel unit" style={{ minWidth: 70 }} onClick={() => setFuelUnit(fuelUnit === 'year' ? 'month' : 'year')}>
-              {fuelUnit === 'year' ? 'Yearly' : 'Monthly'}
+            <button type="button" aria-label="Toggle mileage unit" style={{ minWidth: 70 }} onClick={() => setMileageUnit(mileageUnit === 'year' ? 'month' : 'year')}>
+              {mileageUnit === 'year' ? 'Yearly' : 'Monthly'}
             </button>
+          </div>
+          <label htmlFor="fuelType">Fuel Type:</label>
+          <select
+            id="fuelType"
+            value={fuelType}
+            onChange={e => {
+              const type = e.target.value as 'unleaded' | 'electric';
+              setFuelType(type);
+              setFuelCost(type === 'unleaded' ? '135' : '8.5');
+              setFuelEfficiency(type === 'unleaded' ? '40' : '3.5');
+            }}
+            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+          >
+            <option value="unleaded">Unleaded</option>
+            <option value="electric">Electric</option>
+          </select>
+
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <div style={{ flex: 1 }}>
+              <label htmlFor="fuelCost">Fuel Cost ({fuelType === 'unleaded' ? 'pence/litre' : 'pence/kWh'}):</label>
+              <input
+                id="fuelCost"
+                type="number"
+                min="0"
+                step="any"
+                value={fuelCost}
+                onChange={e => setFuelCost(e.target.value)}
+                placeholder={fuelType === 'unleaded' ? '135' : '8.5'}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label htmlFor="fuelEfficiency">Fuel Efficiency ({fuelType === 'unleaded' ? 'MPG' : 'miles/kWh'}):</label>
+              <input
+                id="fuelEfficiency"
+                type="number"
+                min="0"
+                step="any"
+                value={fuelEfficiency}
+                onChange={e => setFuelEfficiency(e.target.value)}
+                placeholder={fuelType === 'unleaded' ? '40' : '3.5'}
+                style={{ width: '100%' }}
+              />
+            </div>
           </div>
           <label htmlFor="roadTax">Road Tax (£/{roadTaxUnit}):</label>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
