@@ -6,6 +6,7 @@ function Home() {
       <h1>Finance Planner</h1>
       <p>Welcome to your personal finance planner. Start by exploring one of the available tools:</p>
       <ul>
+        <li><Link to="/car-finance">Car Finance Planner</Link></li>
         <li><Link to="/salary">Salary Planner</Link></li>
       </ul>
     </div>
