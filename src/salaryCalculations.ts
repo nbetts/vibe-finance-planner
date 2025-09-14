@@ -8,8 +8,13 @@ import {
 import type { TaxYearConfig } from './types';
 import type { SalaryBreakdown, TaxBreakdown } from './types';
 
-export function calculateBreakdown(gross: number, config: TaxYearConfig): SalaryBreakdown {
-  const pension = gross * config.PENSION_RATE;
+export function calculateBreakdown(
+  gross: number,
+  config: TaxYearConfig,
+  opts?: { includeStudentLoan?: boolean; pensionRate?: number }
+): SalaryBreakdown {
+  const pensionRate = typeof opts?.pensionRate === 'number' ? opts.pensionRate : config.PENSION_RATE;
+  const pension = pensionRate > 0 ? gross * pensionRate : 0;
   const extraSalarySacrifice = 0; // No extra salary sacrifice in current calculation
   const totalSalarySacrifice = pension + extraSalarySacrifice;
   let personalAllowance = config.PERSONAL_ALLOWANCE;
@@ -59,10 +64,13 @@ export function calculateBreakdown(gross: number, config: TaxYearConfig): Salary
   }
 
   // Student Loan Plan 2
-  const studentLoanIncome = gross - totalSalarySacrifice;
-  const studentLoan = studentLoanIncome > config.STUDENT_LOAN_THRESHOLD
-    ? (studentLoanIncome - config.STUDENT_LOAN_THRESHOLD) * config.STUDENT_LOAN_RATE
-    : 0;
+  let studentLoan = 0;
+  if (opts?.includeStudentLoan !== false) {
+    const studentLoanIncome = gross - totalSalarySacrifice;
+    studentLoan = studentLoanIncome > config.STUDENT_LOAN_THRESHOLD
+      ? (studentLoanIncome - config.STUDENT_LOAN_THRESHOLD) * config.STUDENT_LOAN_RATE
+      : 0;
+  }
 
   // Take-home
   const takeHome = gross - pension - extraSalarySacrifice - tax - ni - studentLoan;
