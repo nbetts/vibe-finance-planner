@@ -21,7 +21,16 @@ export default function CarFinancePlanner() {
   const [insuranceUnit, setInsuranceUnit] = useLocalStorage<'year' | 'month'>('carFinance.insuranceUnit', 'year');
 
   const [showResult, setShowResult] = useState(false);
-  const [result, setResult] = useState<CarFinanceBreakdown>({ yearly: 0, monthly: 0, threeYear: 0 });
+  const [result, setResult] = useState<CarFinanceBreakdown>({
+    finance: 0,
+    fuel: 0,
+    roadTax: 0,
+    servicing: 0,
+    insurance: 0,
+    total: 0,
+  });
+  const [outputUnit, setOutputUnit] = useState<'year' | 'month'>('year');
+  const getValue = (val: number) => outputUnit === 'year' ? val : val / 12;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +68,7 @@ export default function CarFinancePlanner() {
     setServicingUnit('year');
     setInsurance('');
     setInsuranceUnit('year');
-    setResult({ yearly: 0, monthly: 0, threeYear: 0 });
+    setResult({ finance: 0, fuel: 0, roadTax: 0, servicing: 0, insurance: 0, total: 0 });
     setShowResult(false);
   };
 
@@ -199,25 +208,42 @@ export default function CarFinancePlanner() {
       {showResult && (
         <div className="breakdown">
           <h2>Car Cost Breakdown</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <span>Show as:</span>
+            <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'year' ? 700 : 400 }} onClick={() => setOutputUnit('year')}>Yearly</button>
+            <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'month' ? 700 : 400 }} onClick={() => setOutputUnit('month')}>Monthly</button>
+          </div>
           <table>
             <thead>
               <tr>
-                <th>Period</th>
-                <th>Total (£)</th>
+                <th>Category</th>
+                <th>Cost (£/{outputUnit})</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Yearly</td>
-                <td>£{result.yearly.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                <td>Finance</td>
+                <td>£{getValue(result.finance).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
               </tr>
               <tr>
-                <td>Monthly</td>
-                <td>£{result.monthly.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                <td>Fuel</td>
+                <td>£{getValue(result.fuel).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
               </tr>
               <tr>
-                <td>3 Years</td>
-                <td>£{result.threeYear.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                <td>Road Tax</td>
+                <td>£{getValue(result.roadTax).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+              </tr>
+              <tr>
+                <td>Servicing/Repairs</td>
+                <td>£{getValue(result.servicing).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+              </tr>
+              <tr>
+                <td>Insurance</td>
+                <td>£{getValue(result.insurance).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+              </tr>
+              <tr style={{ fontWeight: 600 }}>
+                <td>Total</td>
+                <td>£{getValue(result.total).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
               </tr>
             </tbody>
           </table>

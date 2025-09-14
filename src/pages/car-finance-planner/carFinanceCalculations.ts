@@ -33,16 +33,18 @@ export function calculateYearlyFuelCost(inputs: CarFinanceInputs): number {
 }
 
 export function calculateCarFinanceBreakdown(inputs: CarFinanceInputs): CarFinanceBreakdown {
-  const yearlyFuel = calculateYearlyFuelCost(inputs);
-  const totalYearly =
-    parse(inputs.finance) +
-    yearlyFuel +
-    parse(inputs.roadTax) +
-    parse(inputs.servicing) +
-    parse(inputs.insurance);
+  const finance = parse(inputs.finance);
+  const fuel = calculateYearlyFuelCost(inputs);
+  const roadTax = parse(inputs.roadTax);
+  const servicing = parse(inputs.servicing);
+  const insurance = parse(inputs.insurance);
+  const total = finance + fuel + roadTax + servicing + insurance;
   return {
-    yearly: totalYearly,
-    monthly: totalYearly / MONTHS_PER_YEAR,
-    threeYear: totalYearly * 3,
+    finance,
+    fuel,
+    roadTax,
+    servicing,
+    insurance,
+    total,
   };
 }

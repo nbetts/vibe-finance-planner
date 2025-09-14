@@ -11,7 +11,10 @@ export type CarFinanceInputs = {
 };
 
 export type CarFinanceBreakdown = {
-  yearly: number;
-  monthly: number;
-  threeYear: number;
+  finance: number;
+  fuel: number;
+  roadTax: number;
+  servicing: number;
+  insurance: number;
+  total: number;
 };
