@@ -1,4 +1,4 @@
-# Copilot Instructions for `salary-planner`
+# Copilot Instructions for `finance-planner`
 
 ## Project Overview
 - **Framework:** React 19 + TypeScript, built with Vite

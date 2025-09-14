@@ -1,5 +1,3 @@
-// src/salaryCalculations.ts
-
 import {
   MONTHS_PER_YEAR,
   WEEKS_PER_YEAR,
