@@ -13,7 +13,6 @@ export type TaxYearConfig = {
   STUDENT_LOAN_RATE: number;
   PENSION_RATE: number;
 };
-// src/types.ts
 
 export type TaxBreakdown = {
   personalAllowance: number;

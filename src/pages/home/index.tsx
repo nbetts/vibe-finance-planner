@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
-import './App.css';
 
-function App() {
+function Home() {
   return (
     <div className="planner-container">
       <h1>Finance Planner</h1>
@@ -13,4 +12,4 @@ function App() {
   );
 }
 
-export default App;
+export default Home;

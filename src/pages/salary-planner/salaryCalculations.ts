@@ -2,7 +2,7 @@ import {
   MONTHS_PER_YEAR,
   WEEKS_PER_YEAR,
   WORKDAYS_PER_YEAR,
-} from './constants';
+} from '../../constants';
 import type { TaxYearConfig } from './types';
 import type { SalaryBreakdown, TaxBreakdown } from './types';
 

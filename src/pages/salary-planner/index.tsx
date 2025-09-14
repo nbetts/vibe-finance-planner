@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useLocalStorage } from './hooks';
+import { useLocalStorage } from '../../hooks';
 import { calculateBreakdown } from './salaryCalculations';
 import { TAX_YEARS } from './constants';
 import type { TaxYearConfig } from './types';
 import type { SalaryBreakdown } from './types';
-import './App.css';
 
 function SalaryPlanner() {
   const [salary, setSalary] = useLocalStorage<string>('salary', '');
