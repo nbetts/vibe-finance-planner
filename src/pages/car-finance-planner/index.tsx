@@ -90,13 +90,17 @@ export default function CarFinancePlanner() {
 
   const getValue = (val: number) => outputUnit === 'year' ? val : val / 12;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const parse = (v: string) => {
-      const n = Number(v);
-      return isNaN(n) || v.trim() === '' ? 0 : n;
-    };
-    const toYearly = (val: string, unit: 'year' | 'month') => unit === 'month' ? parse(val) * MONTHS_PER_YEAR : parse(val);
+
+  // Helper to parse and convert values
+  const parse = (v: string) => {
+    const n = Number(v);
+    return isNaN(n) || v.trim() === '' ? 0 : n;
+  };
+  const toYearly = (val: string, unit: 'year' | 'month') => unit === 'month' ? parse(val) * MONTHS_PER_YEAR : parse(val);
+
+  // Recalculate result whenever inputs change
+  const updateCarResult = (newCars: CarTab[], idx: number) => {
+    const car = newCars[idx];
     const breakdown = calculateCarFinanceBreakdown({
       finance: String(toYearly(car.inputs.finance, car.inputs.financeUnit)),
       roadTax: String(toYearly(car.inputs.roadTax, car.inputs.roadTaxUnit)),
@@ -108,14 +112,53 @@ export default function CarFinancePlanner() {
       fuelCost: car.inputs.fuelCost,
       fuelEfficiency: car.inputs.fuelEfficiency,
     });
-  const newCars = cars.map((c, i) => i === activeTab ? { ...c, result: breakdown } : c);
-  setCars(newCars);
+    return newCars.map((c, i) => i === idx ? { ...c, result: breakdown } : c);
   };
 
-  const handleReset = () => {
-  const newCars = cars.map((car, i) => i === activeTab ? createBlankCar(car.label) : car);
-  setCars(newCars);
+  const [forecastValue, setForecastValue] = useState('');
+  const [forecastMileage, setForecastMileage] = useState('');
+  const [forecastYears, setForecastYears] = useState('');
+
+  const getYearlyMaintenanceCost = (carTab: CarTab) => {
+    if (!carTab.result) return 0;
+    return carTab.result.roadTax + carTab.result.fuel + carTab.result.servicing + carTab.result.insurance;
   };
+
+  let forecastRows: Array<{ year: number; residualValue: number; cost: number; totalCost: number }> = [];
+  if (
+    forecastValue.trim() !== '' &&
+    forecastMileage.trim() !== '' &&
+    forecastYears.trim() !== '' &&
+    !isNaN(Number(forecastValue)) &&
+    !isNaN(Number(forecastMileage)) &&
+    !isNaN(Number(forecastYears))
+  ) {
+    const forecastCarValues = (value: number) => {
+      const arr = [];
+      let v = value;
+      for (let i = 1; i <= 10; i++) {
+        v *= 0.85;
+        arr.push({ year: i, residualValue: v, cost: value - v });
+      }
+      return arr;
+    };
+    const value = Number(forecastValue);
+    const years = Number(forecastYears);
+    const forecast = forecastCarValues(value);
+    let accumulated = 0;
+    forecastRows = forecast.map((row, idx) => {
+      const maintenance = getYearlyMaintenanceCost(car);
+      const finance = (car.result && idx < years) ? car.result.finance : 0;
+      const yearCost = row.cost + maintenance + finance;
+      accumulated += yearCost;
+      return {
+        year: row.year,
+        residualValue: row.residualValue,
+        cost: yearCost,
+        totalCost: accumulated,
+      };
+    });
+  }
 
   return (
     <div className="planner-container">
@@ -174,7 +217,7 @@ export default function CarFinancePlanner() {
         ))}
         <button type="button" aria-label="Add car" className="add-tab-btn" onClick={handleAddTab}>+</button>
       </div>
-      <form className="salary-input" onSubmit={handleSubmit} autoComplete="off">
+      <form className="salary-input" autoComplete="off" onSubmit={e => e.preventDefault()}>
         <div className="salary-input-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.7rem' }}>
           <label htmlFor="car-label">Name</label>
           <input
@@ -194,14 +237,14 @@ export default function CarFinancePlanner() {
               value={car.inputs.finance}
               onChange={e => {
                 const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, finance: e.target.value } } : c);
-                setCars(newCars as CarTab[]);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
               }}
               placeholder="e.g. 3000"
               style={{ flex: 1 }}
             />
             <button type="button" aria-label="Toggle finance unit" style={{ minWidth: 70 }} onClick={() => {
               const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeUnit: (c.inputs.financeUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(newCars as CarTab[]);
+              setCars(updateCarResult(newCars as CarTab[], activeTab));
             }}>
               {car.inputs.financeUnit === 'year' ? 'Yearly' : 'Monthly'}
             </button>
@@ -215,14 +258,14 @@ export default function CarFinancePlanner() {
               value={car.inputs.mileage}
               onChange={e => {
                 const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, mileage: e.target.value } } : c);
-                setCars(newCars as CarTab[]);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
               }}
               placeholder="e.g. 12000"
               style={{ flex: 1 }}
             />
             <button type="button" aria-label="Toggle mileage unit" style={{ minWidth: 70 }} onClick={() => {
               const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, mileageUnit: (c.inputs.mileageUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(newCars as CarTab[]);
+              setCars(updateCarResult(newCars as CarTab[], activeTab));
             }}>
               {car.inputs.mileageUnit === 'year' ? 'Yearly' : 'Monthly'}
             </button>
@@ -234,7 +277,7 @@ export default function CarFinancePlanner() {
             onChange={e => {
               const type = e.target.value as FuelType;
               const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelType: type, fuelCost: type === 'unleaded' ? '135' : '8.5', fuelEfficiency: type === 'unleaded' ? '40' : '3.5' } } : c);
-              setCars(newCars as CarTab[]);
+              setCars(updateCarResult(newCars as CarTab[], activeTab));
             }}
             style={{ marginBottom: '0.5rem', maxWidth: 200 }}
           >
@@ -245,35 +288,35 @@ export default function CarFinancePlanner() {
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
             <div style={{ flex: 1 }}>
               <label htmlFor="fuelCost">Fuel Cost ({car.inputs.fuelType === 'unleaded' ? 'pence/litre' : 'pence/kWh'})</label>
-              <input
-                id="fuelCost"
-                type="number"
-                min="0"
-                step="any"
-                value={car.inputs.fuelCost}
-                onChange={e => {
-                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelCost: e.target.value } } : c);
-                  setCars(newCars as CarTab[]);
-                }}
-                placeholder={car.inputs.fuelType === 'unleaded' ? '135' : '8.5'}
-                style={{ width: '90%' }}
-              />
+                <input
+                  id="fuelCost"
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={car.inputs.fuelCost}
+                  onChange={e => {
+                    const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelCost: e.target.value } } : c);
+                    setCars(updateCarResult(newCars as CarTab[], activeTab));
+                  }}
+                  placeholder={car.inputs.fuelType === 'unleaded' ? '135' : '8.5'}
+                  style={{ width: '90%' }}
+                />
             </div>
             <div style={{ flex: 1 }}>
               <label htmlFor="fuelEfficiency">Fuel Efficiency ({car.inputs.fuelType === 'unleaded' ? 'MPG' : 'miles/kWh'})</label>
-              <input
-                id="fuelEfficiency"
-                type="number"
-                min="0"
-                step="any"
-                value={car.inputs.fuelEfficiency}
-                onChange={e => {
-                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelEfficiency: e.target.value } } : c);
-                  setCars(newCars as CarTab[]);
-                }}
-                placeholder={car.inputs.fuelType === 'unleaded' ? '40' : '3.5'}
-                style={{ width: '90%' }}
-              />
+                <input
+                  id="fuelEfficiency"
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={car.inputs.fuelEfficiency}
+                  onChange={e => {
+                    const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelEfficiency: e.target.value } } : c);
+                    setCars(updateCarResult(newCars as CarTab[], activeTab));
+                  }}
+                  placeholder={car.inputs.fuelType === 'unleaded' ? '40' : '3.5'}
+                  style={{ width: '90%' }}
+                />
             </div>
           </div>
           <label htmlFor="roadTax">Road Tax (£/{car.inputs.roadTaxUnit})</label>
@@ -285,14 +328,14 @@ export default function CarFinancePlanner() {
               value={car.inputs.roadTax}
               onChange={e => {
                 const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, roadTax: e.target.value } } : c);
-                setCars(newCars as CarTab[]);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
               }}
               placeholder="e.g. 180"
               style={{ flex: 1 }}
             />
             <button type="button" aria-label="Toggle road tax unit" style={{ minWidth: 70 }} onClick={() => {
               const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, roadTaxUnit: (c.inputs.roadTaxUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(newCars as CarTab[]);
+              setCars(updateCarResult(newCars as CarTab[], activeTab));
             }}>
               {car.inputs.roadTaxUnit === 'year' ? 'Yearly' : 'Monthly'}
             </button>
@@ -306,14 +349,14 @@ export default function CarFinancePlanner() {
               value={car.inputs.servicing}
               onChange={e => {
                 const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, servicing: e.target.value } } : c);
-                setCars(newCars as CarTab[]);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
               }}
               placeholder="e.g. 400"
               style={{ flex: 1 }}
             />
             <button type="button" aria-label="Toggle servicing unit" style={{ minWidth: 70 }} onClick={() => {
               const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, servicingUnit: (c.inputs.servicingUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(newCars as CarTab[]);
+              setCars(updateCarResult(newCars as CarTab[], activeTab));
             }}>
               {car.inputs.servicingUnit === 'year' ? 'Yearly' : 'Monthly'}
             </button>
@@ -327,27 +370,63 @@ export default function CarFinancePlanner() {
               value={car.inputs.insurance}
               onChange={e => {
                 const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, insurance: e.target.value } } : c);
-                setCars(newCars as CarTab[]);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
               }}
               placeholder="e.g. 600"
               style={{ flex: 1 }}
             />
             <button type="button" aria-label="Toggle insurance unit" style={{ minWidth: 70 }} onClick={() => {
               const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, insuranceUnit: (c.inputs.insuranceUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(newCars as CarTab[]);
+              setCars(updateCarResult(newCars as CarTab[], activeTab));
             }}>
               {car.inputs.insuranceUnit === 'year' ? 'Yearly' : 'Monthly'}
             </button>
           </div>
-          <div style={{ display: 'flex', gap: '0.7rem' }}>
-            <button type="submit">Calculate</button>
-            <button type="button" onClick={handleReset} style={{ background: 'var(--border)', color: 'var(--text)' }}>Reset</button>
-          </div>
+          {/* Removed Calculate and Reset buttons. All inputs are now reactive. */}
         </div>
       </form>
       {cars.length > 0 && cars[activeTab].result && (
         <div className="breakdown">
           <h2>Car Cost Breakdown</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <span>Show as</span>
+            <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'year' ? 700 : 400 }} onClick={() => setOutputUnit('year')}>Yearly</button>
+            <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'month' ? 700 : 400 }} onClick={() => setOutputUnit('month')}>Monthly</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>{cars[activeTab].label} (£/{outputUnit === 'year' ? 'yr' : 'mo'})</th>
+              </tr>
+            </thead>
+            <tbody>
+              {['finance', 'fuel', 'roadTax', 'servicing', 'insurance', 'total'].map((field) => (
+                <tr key={field} style={field === 'total' ? { fontWeight: 600 } : {}}>
+                  <td>
+                    {field === 'finance' ? 'Finance' :
+                     field === 'fuel' ? 'Fuel' :
+                     field === 'roadTax' ? 'Road Tax' :
+                     field === 'servicing' ? 'Servicing/Repairs' :
+                     field === 'insurance' ? 'Insurance' :
+                     'Total'}
+                  </td>
+                  <td>
+                    {cars[activeTab].result ?
+                      getValue(cars[activeTab].result[field as keyof CarFinanceBreakdown]).toLocaleString(undefined, { maximumFractionDigits: 2 }) :
+                      '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Car cost comparison section: table with all cars */}
+      {cars.length > 1 && cars.some((c: CarTab) => c.result) && (
+        <div className="breakdown" style={{ marginTop: '2.5rem' }}>
+          <h2>Car Cost Comparison</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
             <span>Show as</span>
             <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'year' ? 700 : 400 }} onClick={() => setOutputUnit('year')}>Yearly</button>
@@ -386,7 +465,73 @@ export default function CarFinancePlanner() {
           </table>
         </div>
       )}
+      {/* Car cost forecast section - now its own section below breakdown */}
+      <section className="car-forecast" style={{ marginTop: '2.5rem', background: 'var(--background)', borderRadius: 8, boxShadow: '0 1px 8px 0 rgba(0,0,0,0.04)', padding: '2rem 1.5rem' }}>
+        <h2 style={{ marginBottom: '1.2rem' }}>Car Cost Forecast</h2>
+        <form className="salary-input" autoComplete="off" onSubmit={e => e.preventDefault()}>
+          <div className="salary-input-row" style={{ flexDirection: 'row', alignItems: 'flex-end', gap: '2rem', flexWrap: 'wrap', marginBottom: '1.2rem' }}>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <label htmlFor="forecastValue">Current Car Value (£)</label>
+              <input
+                id="forecastValue"
+                type="number"
+                min="0"
+                value={forecastValue}
+                onChange={e => setForecastValue(e.target.value)}
+                placeholder="e.g. 15000"
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <label htmlFor="forecastMileage">Current Mileage</label>
+              <input
+                id="forecastMileage"
+                type="number"
+                min="0"
+                value={forecastMileage}
+                onChange={e => setForecastMileage(e.target.value)}
+                placeholder="e.g. 30000"
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <label htmlFor="forecastYears">Finance Years Remaining</label>
+              <input
+                id="forecastYears"
+                type="number"
+                min="0"
+                max="10"
+                value={forecastYears}
+                onChange={e => setForecastYears(e.target.value)}
+                placeholder="e.g. 3"
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+        </form>
+        {forecastRows.length > 0 && (
+          <table style={{ marginTop: '1rem' }}>
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Residual Value (£)</th>
+                <th>Year Cost (£)</th>
+                <th>Total Cost (£)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {forecastRows.map(row => (
+                <tr key={row.year}>
+                  <td>{row.year}</td>
+                  <td>{row.residualValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                  <td>{row.cost.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                  <td>{row.totalCost.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     </div>
   );
-}
-// NOTE: If uuid is not installed, run: npm install uuid
+};

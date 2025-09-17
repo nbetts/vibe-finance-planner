@@ -18,3 +18,8 @@ export type CarFinanceBreakdown = {
   insurance: number;
   total: number;
 };
+
+export type CarValueForecastPoint = {
+  age: number;
+  value: number;
+};

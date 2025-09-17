@@ -14,31 +14,19 @@ function SalaryPlanner() {
   const [taxYearKey, setTaxYearKey] = useState<string>('2025_26');
   const taxYearConfig: TaxYearConfig = TAX_YEARS[taxYearKey];
 
-  const handleCalculate = () => {
-    const gross = Number(salary);
-    const pension = pensionPercent.trim() === '' ? undefined : Number(pensionPercent) / 100;
-    if (isNaN(gross) || gross <= 0 || (pensionPercent.trim() !== '' && (isNaN(Number(pensionPercent)) || Number(pensionPercent) < 0))) {
-      setBreakdown(null);
-      return;
-    }
-    setBreakdown(calculateBreakdown(gross, taxYearConfig, { includeStudentLoan, pensionRate: pension }));
-  };
-
+  // Recalculate breakdown whenever any input changes
   useEffect(() => {
     const gross = Number(salary);
     const pension = pensionPercent.trim() === '' ? undefined : Number(pensionPercent) / 100;
     if (gross > 0 && !isNaN(gross) && (pensionPercent.trim() === '' || (!isNaN(Number(pensionPercent)) && Number(pensionPercent) >= 0))) {
       setBreakdown(calculateBreakdown(gross, taxYearConfig, { includeStudentLoan, pensionRate: pension }));
+    } else {
+      setBreakdown(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxYearKey]);
+  }, [salary, includeStudentLoan, pensionPercent, taxYearKey]);
 
-  const handleReset = () => {
-    setSalary('');
-    setIncludeStudentLoan(true);
-    setPensionPercent('0');
-    setBreakdown(null);
-  };
+  // Removed handleReset, no longer needed
 
   return (
     <div className="planner-container">
@@ -48,11 +36,8 @@ function SalaryPlanner() {
       <h1>Salary Planner</h1>
       <form
         className="salary-input"
-        onSubmit={e => {
-          e.preventDefault();
-          handleCalculate();
-        }}
         autoComplete="off"
+        onSubmit={e => e.preventDefault()}
       >
         <div className="salary-input-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.7rem' }}>
           <label htmlFor="taxYear">Tax Year</label>
@@ -109,10 +94,7 @@ function SalaryPlanner() {
             style={{ width: '100%' }}
             aria-label="Pension percentage slider"
           />
-          <div style={{ display: 'flex', gap: '0.7rem' }}>
-            <button type="submit">Calculate</button>
-            <button type="button" onClick={handleReset} style={{ background: 'var(--border)', color: 'var(--text)' }}>Reset</button>
-          </div>
+          {/* Removed Calculate and Reset buttons. All inputs are now reactive. */}
         </div>
       </form>
       {breakdown && (
