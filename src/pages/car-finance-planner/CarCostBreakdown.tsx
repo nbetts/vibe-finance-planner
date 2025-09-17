@@ -67,9 +67,9 @@ export const CarCostBreakdown: React.FC<CarCostBreakdownProps> = ({ car, outputU
               </tr>
             </thead>
             <tbody>
-              {forecastRows.map(row => (
+              {forecastRows.map((row, index) => (
                 <tr key={row.year}>
-                  <td>{row.year}</td>
+                  <td>{index + 1}</td>
                   <td>{row.residualValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                   <td>{row.depreciation.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                   <td>{row.maintenance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>

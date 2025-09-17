@@ -222,228 +222,230 @@ export default function CarFinancePlanner() {
         ))}
         <button type="button" aria-label="Add car" className="add-tab-btn" onClick={handleAddTab}>+</button>
       </div>
-      <form className="salary-input" autoComplete="off" onSubmit={e => e.preventDefault()}>
-        <div className="salary-input-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.7rem' }}>
-          <label htmlFor="car-label">Name</label>
-          <input
-            id="car-label"
-            type="text"
-            value={car.label}
-            onChange={e => handleTabLabelChange(activeTab, e.target.value)}
-            placeholder="e.g. Car 1"
-            style={{ marginBottom: '0.7rem', maxWidth: 200 }}
-          />
-          <label htmlFor="finance">Finance (£/{car.inputs.financeUnit})</label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      <div className="planner-view">
+        <form className="salary-input" autoComplete="off" onSubmit={e => e.preventDefault()}>
+          <div className="salary-input-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.7rem' }}>
+            <label htmlFor="car-label">Name</label>
             <input
-              id="finance"
-              type="number"
-              min="0"
-              value={car.inputs.finance}
+              id="car-label"
+              type="text"
+              value={car.label}
+              onChange={e => handleTabLabelChange(activeTab, e.target.value)}
+              placeholder="e.g. Car 1"
+              style={{ marginBottom: '0.7rem', maxWidth: 200 }}
+            />
+            <label htmlFor="finance">Finance (£/{car.inputs.financeUnit})</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                id="finance"
+                type="number"
+                min="0"
+                value={car.inputs.finance}
+                onChange={e => {
+                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, finance: e.target.value } } : c);
+                  setCars(updateCarResult(newCars as CarTab[], activeTab));
+                }}
+                placeholder="e.g. 3000"
+                style={{ flex: 1 }}
+              />
+              <button type="button" aria-label="Toggle finance unit" style={{ minWidth: 70 }} onClick={() => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeUnit: (c.inputs.financeUnit === 'year' ? 'month' : 'year') as Unit } } : c);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
+              }}>
+                {car.inputs.financeUnit === 'year' ? 'Yearly' : 'Monthly'}
+              </button>
+            </div>
+            <label htmlFor="mileage">Mileage (miles/{car.inputs.mileageUnit})</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
+              <input
+                id="mileage"
+                type="number"
+                min="0"
+                value={car.inputs.mileage}
+                onChange={e => {
+                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, mileage: e.target.value } } : c);
+                  setCars(updateCarResult(newCars as CarTab[], activeTab));
+                }}
+                placeholder="e.g. 12000"
+                style={{ flex: 1 }}
+              />
+              <button type="button" aria-label="Toggle mileage unit" style={{ minWidth: 70 }} onClick={() => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, mileageUnit: (c.inputs.mileageUnit === 'year' ? 'month' : 'year') as Unit } } : c);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
+              }}>
+                {car.inputs.mileageUnit === 'year' ? 'Yearly' : 'Monthly'}
+              </button>
+            </div>
+            <label htmlFor="fuelType">Fuel Type</label>
+            <select
+              id="fuelType"
+              value={car.inputs.fuelType}
               onChange={e => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, finance: e.target.value } } : c);
+                const type = e.target.value as FuelType;
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelType: type, fuelCost: type === 'unleaded' ? '135' : '8.5', fuelEfficiency: type === 'unleaded' ? '40' : '3.5' } } : c);
                 setCars(updateCarResult(newCars as CarTab[], activeTab));
               }}
-              placeholder="e.g. 3000"
-              style={{ flex: 1 }}
-            />
-            <button type="button" aria-label="Toggle finance unit" style={{ minWidth: 70 }} onClick={() => {
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeUnit: (c.inputs.financeUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(updateCarResult(newCars as CarTab[], activeTab));
-            }}>
-              {car.inputs.financeUnit === 'year' ? 'Yearly' : 'Monthly'}
-            </button>
-          </div>
-          <label htmlFor="mileage">Mileage (miles/{car.inputs.mileageUnit})</label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
-            <input
-              id="mileage"
-              type="number"
-              min="0"
-              value={car.inputs.mileage}
-              onChange={e => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, mileage: e.target.value } } : c);
-                setCars(updateCarResult(newCars as CarTab[], activeTab));
-              }}
-              placeholder="e.g. 12000"
-              style={{ flex: 1 }}
-            />
-            <button type="button" aria-label="Toggle mileage unit" style={{ minWidth: 70 }} onClick={() => {
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, mileageUnit: (c.inputs.mileageUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(updateCarResult(newCars as CarTab[], activeTab));
-            }}>
-              {car.inputs.mileageUnit === 'year' ? 'Yearly' : 'Monthly'}
-            </button>
-          </div>
-          <label htmlFor="fuelType">Fuel Type</label>
-          <select
-            id="fuelType"
-            value={car.inputs.fuelType}
-            onChange={e => {
-              const type = e.target.value as FuelType;
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelType: type, fuelCost: type === 'unleaded' ? '135' : '8.5', fuelEfficiency: type === 'unleaded' ? '40' : '3.5' } } : c);
-              setCars(updateCarResult(newCars as CarTab[], activeTab));
-            }}
-            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
-          >
-            <option value="unleaded">Unleaded</option>
-            <option value="electric">Electric</option>
-          </select>
+              style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+            >
+              <option value="unleaded">Unleaded</option>
+              <option value="electric">Electric</option>
+            </select>
 
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <div style={{ flex: 1 }}>
-              <label htmlFor="fuelCost">Fuel Cost ({car.inputs.fuelType === 'unleaded' ? 'pence/litre' : 'pence/kWh'})</label>
-                <input
-                  id="fuelCost"
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={car.inputs.fuelCost}
-                  onChange={e => {
-                    const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelCost: e.target.value } } : c);
-                    setCars(updateCarResult(newCars as CarTab[], activeTab));
-                  }}
-                  placeholder={car.inputs.fuelType === 'unleaded' ? '135' : '8.5'}
-                  style={{ width: '90%' }}
-                />
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <div style={{ flex: 1 }}>
+                <label htmlFor="fuelCost">Fuel Cost ({car.inputs.fuelType === 'unleaded' ? 'pence/litre' : 'pence/kWh'})</label>
+                  <input
+                    id="fuelCost"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={car.inputs.fuelCost}
+                    onChange={e => {
+                      const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelCost: e.target.value } } : c);
+                      setCars(updateCarResult(newCars as CarTab[], activeTab));
+                    }}
+                    placeholder={car.inputs.fuelType === 'unleaded' ? '135' : '8.5'}
+                    style={{ width: '90%' }}
+                  />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label htmlFor="fuelEfficiency">Fuel Efficiency ({car.inputs.fuelType === 'unleaded' ? 'MPG' : 'miles/kWh'})</label>
+                  <input
+                    id="fuelEfficiency"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={car.inputs.fuelEfficiency}
+                    onChange={e => {
+                      const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelEfficiency: e.target.value } } : c);
+                      setCars(updateCarResult(newCars as CarTab[], activeTab));
+                    }}
+                    placeholder={car.inputs.fuelType === 'unleaded' ? '40' : '3.5'}
+                    style={{ width: '90%' }}
+                  />
+              </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <label htmlFor="fuelEfficiency">Fuel Efficiency ({car.inputs.fuelType === 'unleaded' ? 'MPG' : 'miles/kWh'})</label>
-                <input
-                  id="fuelEfficiency"
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={car.inputs.fuelEfficiency}
-                  onChange={e => {
-                    const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, fuelEfficiency: e.target.value } } : c);
-                    setCars(updateCarResult(newCars as CarTab[], activeTab));
-                  }}
-                  placeholder={car.inputs.fuelType === 'unleaded' ? '40' : '3.5'}
-                  style={{ width: '90%' }}
-                />
+            <label htmlFor="roadTax">Road Tax (£/{car.inputs.roadTaxUnit})</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                id="roadTax"
+                type="number"
+                min="0"
+                value={car.inputs.roadTax}
+                onChange={e => {
+                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, roadTax: e.target.value } } : c);
+                  setCars(updateCarResult(newCars as CarTab[], activeTab));
+                }}
+                placeholder="e.g. 180"
+                style={{ flex: 1 }}
+              />
+              <button type="button" aria-label="Toggle road tax unit" style={{ minWidth: 70 }} onClick={() => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, roadTaxUnit: (c.inputs.roadTaxUnit === 'year' ? 'month' : 'year') as Unit } } : c);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
+              }}>
+                {car.inputs.roadTaxUnit === 'year' ? 'Yearly' : 'Monthly'}
+              </button>
             </div>
-          </div>
-          <label htmlFor="roadTax">Road Tax (£/{car.inputs.roadTaxUnit})</label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <label htmlFor="servicing">Servicing/Repairs (£/{car.inputs.servicingUnit})</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                id="servicing"
+                type="number"
+                min="0"
+                value={car.inputs.servicing}
+                onChange={e => {
+                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, servicing: e.target.value } } : c);
+                  setCars(updateCarResult(newCars as CarTab[], activeTab));
+                }}
+                placeholder="e.g. 400"
+                style={{ flex: 1 }}
+              />
+              <button type="button" aria-label="Toggle servicing unit" style={{ minWidth: 70 }} onClick={() => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, servicingUnit: (c.inputs.servicingUnit === 'year' ? 'month' : 'year') as Unit } } : c);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
+              }}>
+                {car.inputs.servicingUnit === 'year' ? 'Yearly' : 'Monthly'}
+              </button>
+            </div>
+            <label htmlFor="insurance">Insurance (£/{car.inputs.insuranceUnit})</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                id="insurance"
+                type="number"
+                min="0"
+                value={car.inputs.insurance}
+                onChange={e => {
+                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, insurance: e.target.value } } : c);
+                  setCars(updateCarResult(newCars as CarTab[], activeTab));
+                }}
+                placeholder="e.g. 600"
+                style={{ flex: 1 }}
+              />
+              <button type="button" aria-label="Toggle insurance unit" style={{ minWidth: 70 }} onClick={() => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, insuranceUnit: (c.inputs.insuranceUnit === 'year' ? 'month' : 'year') as Unit } } : c);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
+              }}>
+                {car.inputs.insuranceUnit === 'year' ? 'Yearly' : 'Monthly'}
+              </button>
+            </div>
+            <label htmlFor="currentCarValue">Current Car Value (£)</label>
             <input
-              id="roadTax"
+              id="currentCarValue"
               type="number"
               min="0"
-              value={car.inputs.roadTax}
+              value={car.inputs.currentCarValue || ''}
               onChange={e => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, roadTax: e.target.value } } : c);
-                setCars(updateCarResult(newCars as CarTab[], activeTab));
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentCarValue: e.target.value } } : c);
+                setCars(newCars);
               }}
-              placeholder="e.g. 180"
-              style={{ flex: 1 }}
+              placeholder="e.g. 15000"
+              style={{ marginBottom: '0.5rem', maxWidth: 200 }}
             />
-            <button type="button" aria-label="Toggle road tax unit" style={{ minWidth: 70 }} onClick={() => {
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, roadTaxUnit: (c.inputs.roadTaxUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(updateCarResult(newCars as CarTab[], activeTab));
-            }}>
-              {car.inputs.roadTaxUnit === 'year' ? 'Yearly' : 'Monthly'}
-            </button>
-          </div>
-          <label htmlFor="servicing">Servicing/Repairs (£/{car.inputs.servicingUnit})</label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <label htmlFor="currentAge">Current Age (years)</label>
             <input
-              id="servicing"
+              id="currentAge"
               type="number"
               min="0"
-              value={car.inputs.servicing}
+              value={car.inputs.currentAge || ''}
               onChange={e => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, servicing: e.target.value } } : c);
-                setCars(updateCarResult(newCars as CarTab[], activeTab));
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentAge: e.target.value } } : c);
+                setCars(newCars);
               }}
-              placeholder="e.g. 400"
-              style={{ flex: 1 }}
+              placeholder="e.g. 2"
+              style={{ marginBottom: '0.5rem', maxWidth: 200 }}
             />
-            <button type="button" aria-label="Toggle servicing unit" style={{ minWidth: 70 }} onClick={() => {
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, servicingUnit: (c.inputs.servicingUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(updateCarResult(newCars as CarTab[], activeTab));
-            }}>
-              {car.inputs.servicingUnit === 'year' ? 'Yearly' : 'Monthly'}
-            </button>
-          </div>
-          <label htmlFor="insurance">Insurance (£/{car.inputs.insuranceUnit})</label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <label htmlFor="currentMileage">Current Mileage</label>
             <input
-              id="insurance"
+              id="currentMileage"
               type="number"
               min="0"
-              value={car.inputs.insurance}
+              value={car.inputs.currentMileage || ''}
               onChange={e => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, insurance: e.target.value } } : c);
-                setCars(updateCarResult(newCars as CarTab[], activeTab));
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentMileage: e.target.value } } : c);
+                setCars(newCars);
               }}
-              placeholder="e.g. 600"
-              style={{ flex: 1 }}
+              placeholder="e.g. 30000"
+              style={{ marginBottom: '0.5rem', maxWidth: 200 }}
             />
-            <button type="button" aria-label="Toggle insurance unit" style={{ minWidth: 70 }} onClick={() => {
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, insuranceUnit: (c.inputs.insuranceUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-              setCars(updateCarResult(newCars as CarTab[], activeTab));
-            }}>
-              {car.inputs.insuranceUnit === 'year' ? 'Yearly' : 'Monthly'}
-            </button>
+            <label htmlFor="financeYearsRemaining">Finance Years Remaining</label>
+            <input
+              id="financeYearsRemaining"
+              type="number"
+              min="0"
+              max="10"
+              value={car.inputs.financeYearsRemaining || ''}
+              onChange={e => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeYearsRemaining: e.target.value } } : c);
+                setCars(newCars);
+              }}
+              placeholder="e.g. 3"
+              style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+            />
+            {/* Removed Calculate and Reset buttons. All inputs are now reactive. */}
           </div>
-          <label htmlFor="currentCarValue">Current Car Value (£)</label>
-          <input
-            id="currentCarValue"
-            type="number"
-            min="0"
-            value={car.inputs.currentCarValue || ''}
-            onChange={e => {
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentCarValue: e.target.value } } : c);
-              setCars(newCars);
-            }}
-            placeholder="e.g. 15000"
-            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
-          />
-          <label htmlFor="currentAge">Current Age (years)</label>
-          <input
-            id="currentAge"
-            type="number"
-            min="0"
-            value={car.inputs.currentAge || ''}
-            onChange={e => {
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentAge: e.target.value } } : c);
-              setCars(newCars);
-            }}
-            placeholder="e.g. 2"
-            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
-          />
-          <label htmlFor="currentMileage">Current Mileage</label>
-          <input
-            id="currentMileage"
-            type="number"
-            min="0"
-            value={car.inputs.currentMileage || ''}
-            onChange={e => {
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentMileage: e.target.value } } : c);
-              setCars(newCars);
-            }}
-            placeholder="e.g. 30000"
-            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
-          />
-          <label htmlFor="financeYearsRemaining">Finance Years Remaining</label>
-          <input
-            id="financeYearsRemaining"
-            type="number"
-            min="0"
-            max="10"
-            value={car.inputs.financeYearsRemaining || ''}
-            onChange={e => {
-              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeYearsRemaining: e.target.value } } : c);
-              setCars(newCars);
-            }}
-            placeholder="e.g. 3"
-            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
-          />
-          {/* Removed Calculate and Reset buttons. All inputs are now reactive. */}
-        </div>
-      </form>
-      <CarCostBreakdown car={cars[activeTab]} outputUnit={outputUnit} setOutputUnit={setOutputUnit} forecastRows={forecastRows} />
+        </form>
+        <CarCostBreakdown car={cars[activeTab]} outputUnit={outputUnit} setOutputUnit={setOutputUnit} forecastRows={forecastRows} />
+      </div>
     </div>
   );
 };
