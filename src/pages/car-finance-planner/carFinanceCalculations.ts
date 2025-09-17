@@ -59,8 +59,8 @@ export function forecastCarValues(
   // depreciation rates
   const r1 = 0.25; // years 0–3
   const r2 = 0.15; // years 4–7
-  const r3 = 0.05; // years 8–20+
-  const scrapValue = 500;
+  const r3 = 0.1; // years 8–20+
+  const scrapValue = 0;
   const mileagePenaltyPerThousand = 75; // £ adjustment per 1k miles diff
 
   let value = currentValue;

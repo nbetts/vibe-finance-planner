@@ -1,14 +1,22 @@
-export type CarFinanceInputs = {
+export type Unit = 'year' | 'month';
+export type FuelType = 'unleaded' | 'electric';
+export interface CarFinanceInputs {
   finance: string;
   roadTax: string;
   servicing: string;
   insurance: string;
   mileage: string;
-  mileageUnit: 'year' | 'month';
-  fuelType: 'unleaded' | 'electric';
+  mileageUnit: Unit;
+  fuelType: FuelType;
   fuelCost: string;
   fuelEfficiency: string;
-};
+}
+export interface CarTab {
+  id: string;
+  label: string;
+  inputs: CarFinanceInputs;
+  result: CarFinanceBreakdown | null;
+}
 
 export type CarFinanceBreakdown = {
   finance: number;

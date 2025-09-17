@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useLocalStorage } from '../../hooks';
 import { calculateCarFinanceBreakdown } from './carFinanceCalculations';
+import { forecastCarValues } from './carFinanceCalculations';
 import type { CarFinanceBreakdown } from './types';
+import { CarCostBreakdown } from './CarCostBreakdown';
 import { MONTHS_PER_YEAR } from '../../constants';
 import { Link } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +25,10 @@ interface CarFormInputs {
   servicingUnit: Unit;
   insurance: string;
   insuranceUnit: Unit;
+  currentCarValue?: string;
+  currentAge?: string;
+  currentMileage?: string;
+  financeYearsRemaining?: string;
 }
 interface CarTab {
   id: string;
@@ -88,7 +94,6 @@ export default function CarFinancePlanner() {
 
   const car = cars[activeTab];
 
-  const getValue = (val: number) => outputUnit === 'year' ? val : val / 12;
 
 
   // Helper to parse and convert values
@@ -115,45 +120,45 @@ export default function CarFinancePlanner() {
     return newCars.map((c, i) => i === idx ? { ...c, result: breakdown } : c);
   };
 
-  const [forecastValue, setForecastValue] = useState('');
-  const [forecastMileage, setForecastMileage] = useState('');
-  const [forecastYears, setForecastYears] = useState('');
 
   const getYearlyMaintenanceCost = (carTab: CarTab) => {
     if (!carTab.result) return 0;
     return carTab.result.roadTax + carTab.result.fuel + carTab.result.servicing + carTab.result.insurance;
   };
 
-  let forecastRows: Array<{ year: number; residualValue: number; cost: number; totalCost: number }> = [];
+  let forecastRows: Array<{ year: number; residualValue: number; maintenance: number; depreciation: number; finance: number; cost: number; totalCost: number }> = [];
+  const currentValue = car.inputs.currentCarValue?.trim() || '';
+  const currentAge = car.inputs.currentAge?.trim() || '';
+  const currentMileage = car.inputs.currentMileage?.trim() || '';
+  const financeYears = car.inputs.financeYearsRemaining?.trim() || '';
   if (
-    forecastValue.trim() !== '' &&
-    forecastMileage.trim() !== '' &&
-    forecastYears.trim() !== '' &&
-    !isNaN(Number(forecastValue)) &&
-    !isNaN(Number(forecastMileage)) &&
-    !isNaN(Number(forecastYears))
+    currentValue !== '' &&
+    currentAge !== '' &&
+    currentMileage !== '' &&
+    !isNaN(Number(currentValue)) &&
+    !isNaN(Number(currentAge)) &&
+    !isNaN(Number(currentMileage))
   ) {
-    const forecastCarValues = (value: number) => {
-      const arr = [];
-      let v = value;
-      for (let i = 1; i <= 10; i++) {
-        v *= 0.85;
-        arr.push({ year: i, residualValue: v, cost: value - v });
-      }
-      return arr;
-    };
-    const value = Number(forecastValue);
-    const years = Number(forecastYears);
-    const forecast = forecastCarValues(value);
+    const value = Number(currentValue);
+    const age = Number(currentAge);
+    const mileage = Number(currentMileage);
+    const years = financeYears !== '' && !isNaN(Number(financeYears)) ? Number(financeYears) : 0;
+    const forecast = forecastCarValues(value, age, 10, mileage);
     let accumulated = 0;
+    let prevValue = value;
     forecastRows = forecast.map((row, idx) => {
       const maintenance = getYearlyMaintenanceCost(car);
+      const depreciation = prevValue - row.value;
+      prevValue = row.value;
       const finance = (car.result && idx < years) ? car.result.finance : 0;
-      const yearCost = row.cost + maintenance + finance;
+  const yearCost = maintenance + finance;
       accumulated += yearCost;
       return {
-        year: row.year,
-        residualValue: row.residualValue,
+        year: row.age,
+        residualValue: row.value,
+        maintenance,
+        depreciation,
+        finance,
         cost: yearCost,
         totalCost: accumulated,
       };
@@ -382,156 +387,63 @@ export default function CarFinancePlanner() {
               {car.inputs.insuranceUnit === 'year' ? 'Yearly' : 'Monthly'}
             </button>
           </div>
+          <label htmlFor="currentCarValue">Current Car Value (£)</label>
+          <input
+            id="currentCarValue"
+            type="number"
+            min="0"
+            value={car.inputs.currentCarValue || ''}
+            onChange={e => {
+              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentCarValue: e.target.value } } : c);
+              setCars(newCars);
+            }}
+            placeholder="e.g. 15000"
+            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+          />
+          <label htmlFor="currentAge">Current Age (years)</label>
+          <input
+            id="currentAge"
+            type="number"
+            min="0"
+            value={car.inputs.currentAge || ''}
+            onChange={e => {
+              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentAge: e.target.value } } : c);
+              setCars(newCars);
+            }}
+            placeholder="e.g. 2"
+            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+          />
+          <label htmlFor="currentMileage">Current Mileage</label>
+          <input
+            id="currentMileage"
+            type="number"
+            min="0"
+            value={car.inputs.currentMileage || ''}
+            onChange={e => {
+              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentMileage: e.target.value } } : c);
+              setCars(newCars);
+            }}
+            placeholder="e.g. 30000"
+            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+          />
+          <label htmlFor="financeYearsRemaining">Finance Years Remaining</label>
+          <input
+            id="financeYearsRemaining"
+            type="number"
+            min="0"
+            max="10"
+            value={car.inputs.financeYearsRemaining || ''}
+            onChange={e => {
+              const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeYearsRemaining: e.target.value } } : c);
+              setCars(newCars);
+            }}
+            placeholder="e.g. 3"
+            style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+          />
           {/* Removed Calculate and Reset buttons. All inputs are now reactive. */}
         </div>
       </form>
-      {cars.length > 0 && cars[activeTab].result && (
-        <div className="breakdown">
-          <h2>Car Cost Breakdown</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <span>Show as</span>
-            <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'year' ? 700 : 400 }} onClick={() => setOutputUnit('year')}>Yearly</button>
-            <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'month' ? 700 : 400 }} onClick={() => setOutputUnit('month')}>Monthly</button>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>{cars[activeTab].label} (£/{outputUnit === 'year' ? 'yr' : 'mo'})</th>
-              </tr>
-            </thead>
-            <tbody>
-              {['finance', 'fuel', 'roadTax', 'servicing', 'insurance', 'total'].map((field) => (
-                <tr key={field} style={field === 'total' ? { fontWeight: 600 } : {}}>
-                  <td>
-                    {field === 'finance' ? 'Finance' :
-                     field === 'fuel' ? 'Fuel' :
-                     field === 'roadTax' ? 'Road Tax' :
-                     field === 'servicing' ? 'Servicing/Repairs' :
-                     field === 'insurance' ? 'Insurance' :
-                     'Total'}
-                  </td>
-                  <td>
-                    {cars[activeTab].result ?
-                      getValue(cars[activeTab].result[field as keyof CarFinanceBreakdown]).toLocaleString(undefined, { maximumFractionDigits: 2 }) :
-                      '-'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Car cost comparison section: table with all cars */}
-      {cars.length > 1 && cars.some((c: CarTab) => c.result) && (
-        <div className="breakdown" style={{ marginTop: '2.5rem' }}>
-          <h2>Car Cost Comparison</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <span>Show as</span>
-            <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'year' ? 700 : 400 }} onClick={() => setOutputUnit('year')}>Yearly</button>
-            <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'month' ? 700 : 400 }} onClick={() => setOutputUnit('month')}>Monthly</button>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                {cars.map(car => (
-                  <th key={car.id}>{car.label} (£/{outputUnit === 'year' ? 'yr' : 'mo'})</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {['finance', 'fuel', 'roadTax', 'servicing', 'insurance', 'total'].map((field) => (
-                <tr key={field} style={field === 'total' ? { fontWeight: 600 } : {}}>
-                  <td>
-                    {field === 'finance' ? 'Finance' :
-                     field === 'fuel' ? 'Fuel' :
-                     field === 'roadTax' ? 'Road Tax' :
-                     field === 'servicing' ? 'Servicing/Repairs' :
-                     field === 'insurance' ? 'Insurance' :
-                     'Total'}
-                  </td>
-                  {cars.map(car => (
-                    <td key={car.id}>
-                      {car.result ?
-                        getValue(car.result[field as keyof CarFinanceBreakdown]).toLocaleString(undefined, { maximumFractionDigits: 2 }) :
-                        '-'}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {/* Car cost forecast section - now its own section below breakdown */}
-      <section className="car-forecast" style={{ marginTop: '2.5rem', background: 'var(--background)', borderRadius: 8, boxShadow: '0 1px 8px 0 rgba(0,0,0,0.04)', padding: '2rem 1.5rem' }}>
-        <h2 style={{ marginBottom: '1.2rem' }}>Car Cost Forecast</h2>
-        <form className="salary-input" autoComplete="off" onSubmit={e => e.preventDefault()}>
-          <div className="salary-input-row" style={{ flexDirection: 'row', alignItems: 'flex-end', gap: '2rem', flexWrap: 'wrap', marginBottom: '1.2rem' }}>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <label htmlFor="forecastValue">Current Car Value (£)</label>
-              <input
-                id="forecastValue"
-                type="number"
-                min="0"
-                value={forecastValue}
-                onChange={e => setForecastValue(e.target.value)}
-                placeholder="e.g. 15000"
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <label htmlFor="forecastMileage">Current Mileage</label>
-              <input
-                id="forecastMileage"
-                type="number"
-                min="0"
-                value={forecastMileage}
-                onChange={e => setForecastMileage(e.target.value)}
-                placeholder="e.g. 30000"
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <label htmlFor="forecastYears">Finance Years Remaining</label>
-              <input
-                id="forecastYears"
-                type="number"
-                min="0"
-                max="10"
-                value={forecastYears}
-                onChange={e => setForecastYears(e.target.value)}
-                placeholder="e.g. 3"
-                style={{ width: '100%' }}
-              />
-            </div>
-          </div>
-        </form>
-        {forecastRows.length > 0 && (
-          <table style={{ marginTop: '1rem' }}>
-            <thead>
-              <tr>
-                <th>Year</th>
-                <th>Residual Value (£)</th>
-                <th>Year Cost (£)</th>
-                <th>Total Cost (£)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {forecastRows.map(row => (
-                <tr key={row.year}>
-                  <td>{row.year}</td>
-                  <td>{row.residualValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                  <td>{row.cost.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                  <td>{row.totalCost.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+      <CarCostBreakdown car={cars[activeTab]} outputUnit={outputUnit} setOutputUnit={setOutputUnit} forecastRows={forecastRows} />
     </div>
   );
 };
