@@ -27,6 +27,7 @@ interface CarFormInputs {
   insuranceUnit: Unit;
   extra: string;
   extraUnit: Unit;
+  oneOff: string;
   currentCarValue?: string;
   currentAge?: string;
   currentMileage?: string;
@@ -60,6 +61,7 @@ export default function CarFinancePlanner() {
       insuranceUnit: 'year',
       extra: '',
       extraUnit: 'year',
+      oneOff: '',
     },
     result: null,
   });
@@ -151,12 +153,14 @@ export default function CarFinancePlanner() {
     const forecast = forecastCarValues(value, age, 10, mileage);
     let accumulated = 0;
     let prevValue = value;
+    const oneOff = car.inputs.oneOff && !isNaN(Number(car.inputs.oneOff)) ? Number(car.inputs.oneOff) : 0;
     forecastRows = forecast.map((row, idx) => {
       const maintenance = getYearlyMaintenanceCost(car);
       const depreciation = prevValue - row.value;
       prevValue = row.value;
       const finance = (car.result && idx < years) ? car.result.finance : 0;
-  const yearCost = maintenance + finance;
+      // Add one-off cost only in first year
+      const yearCost = maintenance + finance + (idx === 0 ? oneOff : 0);
       accumulated += yearCost;
       return {
         year: row.age,
@@ -467,7 +471,19 @@ export default function CarFinancePlanner() {
               placeholder="e.g. 3"
               style={{ marginBottom: '0.5rem', maxWidth: 200 }}
             />
-            {/* Removed Calculate and Reset buttons. All inputs are now reactive. */}
+            <label htmlFor="oneOff">One off cost/saving (£)</label>
+            <input
+              id="oneOff"
+              type="number"
+              min="0"
+              value={car.inputs.oneOff}
+              onChange={e => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, oneOff: e.target.value } } : c);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
+              }}
+              placeholder="e.g. 0"
+              style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+            />
           </div>
         </form>
         <CarCostBreakdown car={cars[activeTab]} outputUnit={outputUnit} setOutputUnit={setOutputUnit} forecastRows={forecastRows} />
