@@ -9,11 +9,11 @@ import type { SalaryBreakdown, TaxBreakdown } from './types';
 export function calculateBreakdown(
   gross: number,
   config: TaxYearConfig,
-  opts?: { includeStudentLoan?: boolean; pensionRate?: number }
+  opts?: { includeStudentLoan?: boolean; pensionRate?: number; extraSalarySacrifice?: number }
 ): SalaryBreakdown {
   const pensionRate = typeof opts?.pensionRate === 'number' ? opts.pensionRate : config.PENSION_RATE;
+  const extraSalarySacrifice = typeof opts?.extraSalarySacrifice === 'number' ? opts.extraSalarySacrifice : 0;
   const pension = pensionRate > 0 ? gross * pensionRate : 0;
-  const extraSalarySacrifice = 0; // No extra salary sacrifice in current calculation
   const totalSalarySacrifice = pension + extraSalarySacrifice;
   let personalAllowance = config.PERSONAL_ALLOWANCE;
   if (gross > config.PERSONAL_ALLOWANCE_TAPER_THRESHOLD) {
@@ -114,4 +114,22 @@ export function calculateBreakdown(
     takeHomeWeekly: perWeek(takeHome),
     takeHomeDaily: perDay(takeHome),
   };
+}
+
+export function calculateHICBC(
+  netIncome: number,
+  config: TaxYearConfig,
+  children: number = 1
+): number {
+  // Use config constants for thresholds and benefit rates
+  const start = config.HICBC_START;
+  const full = config.HICBC_FULL;
+  const cbEldest = config.CHILD_BENEFIT_ELDEST_WEEKLY * 52;
+  const cbOthers = (children - 1) * config.CHILD_BENEFIT_OTHERS_WEEKLY * 52;
+  const totalBenefit = cbEldest + cbOthers;
+  if (netIncome <= start) return 0;
+  if (netIncome >= full) return totalBenefit;
+  // Partial clawback: 1% for each £100 over start
+  const percent = Math.floor((netIncome - start) / 100);
+  return (percent / 100) * totalBenefit;
 }

@@ -12,6 +12,10 @@ export type TaxYearConfig = {
   STUDENT_LOAN_THRESHOLD: number;
   STUDENT_LOAN_RATE: number;
   PENSION_RATE: number;
+  HICBC_START: number;
+  HICBC_FULL: number;
+  CHILD_BENEFIT_ELDEST_WEEKLY: number;
+  CHILD_BENEFIT_OTHERS_WEEKLY: number;
 };
 
 export type TaxBreakdown = {
