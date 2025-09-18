@@ -13,7 +13,7 @@ const HICBCResult: React.FC<{ netIncome: number; config: import('./types').TaxYe
   }
   return (
     <div style={{ marginTop: '1.5rem', color: 'var(--warning)', fontWeight: 500 }}>
-      <strong>Yearly High Income Child Benefit Charge (HICBC): £{charge.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong><br />
+      <strong>Yearly High Income Child Benefit Charge (HICBC), assuming 1 child: £{charge.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong><br />
     </div>
   );
 };
