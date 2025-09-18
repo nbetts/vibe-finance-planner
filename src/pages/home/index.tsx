@@ -9,6 +9,7 @@ function Home() {
         <li><Link to="/car-finance">Car Finance Planner</Link></li>
         <li><Link to="/salary">Salary Planner</Link></li>
       </ul>
+      <p>This planner was completely vibe coded for a bit of fun. Please double check your numbers!</p>
     </div>
   );
 }
