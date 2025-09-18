@@ -7,6 +7,7 @@ import { CarCostBreakdown } from './CarCostBreakdown';
 import { MONTHS_PER_YEAR } from '../../constants';
 import { Link } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
+import CarCostGraph from './CarCostGraph';
 
 // Car form and tab state types
 type Unit = 'year' | 'month';
@@ -39,6 +40,10 @@ interface CarTab {
   inputs: CarFormInputs;
   result: CarFinanceBreakdown | null;
 }
+
+const COLORS = [
+  '#0074D9', '#FF4136', '#2ECC40', '#FF851B', '#B10DC9', '#FFDC00', '#001f3f', '#39CCCC', '#01FF70', '#F012BE'
+];
 
 export default function CarFinancePlanner() {
   // Helper to create a blank car form
@@ -133,46 +138,50 @@ export default function CarFinancePlanner() {
     return carTab.result.roadTax + carTab.result.fuel + carTab.result.servicing + carTab.result.insurance + (carTab.result.extra ?? 0);
   };
 
-  let forecastRows: Array<{ year: number; residualValue: number; maintenance: number; depreciation: number; finance: number; cost: number; totalCost: number }> = [];
-  const currentValue = car.inputs.currentCarValue?.trim() || '';
-  const currentAge = car.inputs.currentAge?.trim() || '';
-  const currentMileage = car.inputs.currentMileage?.trim() || '';
-  const financeYears = car.inputs.financeYearsRemaining?.trim() || '';
-  if (
-    currentValue !== '' &&
-    currentAge !== '' &&
-    currentMileage !== '' &&
-    !isNaN(Number(currentValue)) &&
-    !isNaN(Number(currentAge)) &&
-    !isNaN(Number(currentMileage))
-  ) {
-    const value = Number(currentValue);
-    const age = Number(currentAge);
-    const mileage = Number(currentMileage);
-    const years = financeYears !== '' && !isNaN(Number(financeYears)) ? Number(financeYears) : 0;
-    const forecast = forecastCarValues(value, age, 10, mileage);
-    let accumulated = 0;
-    let prevValue = value;
-    const oneOff = car.inputs.oneOff && !isNaN(Number(car.inputs.oneOff)) ? Number(car.inputs.oneOff) : 0;
-    forecastRows = forecast.map((row, idx) => {
-      const maintenance = getYearlyMaintenanceCost(car);
-      const depreciation = prevValue - row.value;
-      prevValue = row.value;
-      const finance = (car.result && idx < years) ? car.result.finance : 0;
-      // Add one-off cost only in first year
-      const yearCost = maintenance + finance + (idx === 0 ? oneOff : 0);
-      accumulated += yearCost;
-      return {
-        year: row.age,
-        residualValue: row.value,
-        maintenance,
-        depreciation,
-        finance,
-        cost: yearCost,
-        totalCost: accumulated,
-      };
-    });
-  }
+  const calculateForecastRows = (car: CarTab) => {
+    let forecastRows: Array<{ year: number; residualValue: number; maintenance: number; depreciation: number; finance: number; cost: number; totalCost: number }> = [];
+    const currentValue = car.inputs.currentCarValue?.trim() || '';
+    const currentAge = car.inputs.currentAge?.trim() || '';
+    const currentMileage = car.inputs.currentMileage?.trim() || '';
+    const financeYears = car.inputs.financeYearsRemaining?.trim() || '';
+    if (
+      currentValue !== '' &&
+      currentAge !== '' &&
+      currentMileage !== '' &&
+      !isNaN(Number(currentValue)) &&
+      !isNaN(Number(currentAge)) &&
+      !isNaN(Number(currentMileage))
+    ) {
+      const value = Number(currentValue);
+      const age = Number(currentAge);
+      const mileage = Number(currentMileage);
+      const years = financeYears !== '' && !isNaN(Number(financeYears)) ? Number(financeYears) : 0;
+      const forecast = forecastCarValues(value, age, 10, mileage);
+      let accumulated = 0;
+      let prevValue = value;
+      const oneOff = car.inputs.oneOff && !isNaN(Number(car.inputs.oneOff)) ? Number(car.inputs.oneOff) : 0;
+      forecastRows = forecast.map((row, idx) => {
+        const maintenance = getYearlyMaintenanceCost(car);
+        const depreciation = prevValue - row.value;
+        prevValue = row.value;
+        const finance = (car.result && idx < years) ? car.result.finance : 0;
+        // Add one-off cost only in first year
+        const yearCost = maintenance + finance + (idx === 0 ? oneOff : 0);
+        accumulated += yearCost;
+        return {
+          year: row.age,
+          residualValue: row.value,
+          maintenance,
+          depreciation,
+          finance,
+          cost: yearCost,
+          totalCost: accumulated,
+        };
+      });
+    }
+
+    return forecastRows;
+  };
 
   return (
     <div className="planner-container">
@@ -486,8 +495,16 @@ export default function CarFinancePlanner() {
             />
           </div>
         </form>
-        <CarCostBreakdown car={cars[activeTab]} outputUnit={outputUnit} setOutputUnit={setOutputUnit} forecastRows={forecastRows} />
+        <CarCostBreakdown car={cars[activeTab]} outputUnit={outputUnit} setOutputUnit={setOutputUnit} forecastRows={calculateForecastRows(cars[activeTab])} />
       </div>
+      {/* Graph of total costs over 10 years for all cars */}
+      <CarCostGraph
+        cars={cars.map((car, idx) => ({
+          label: car.label,
+          forecastRows: calculateForecastRows(car),
+          color: COLORS[idx % COLORS.length],
+        }))}
+      />
     </div>
   );
 };
