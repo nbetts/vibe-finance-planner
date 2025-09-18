@@ -114,6 +114,7 @@ function SalaryPlanner() {
         <Link to="/" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 }}>&larr; Back to Home</Link>
       </div>
       <h1>Salary Planner</h1>
+      <p>Calculate and compare salary finance options. Instantly see breakdowns and forecasts as you adjust inputs.</p>
       {/* Tab bar UI */}
       <div className="car-tabs-bar">
         {tabs.map((tab, idx) => (
@@ -186,6 +187,7 @@ function SalaryPlanner() {
               id="taxYear"
               value={tab.inputs.taxYearKey}
               onChange={e => updateTabInputs('taxYearKey', e.target.value)}
+              style={{ maxWidth: 200 }}
             >
               {Object.entries(TAX_YEARS).map(([key, config]) => (
                 <option key={key} value={key}>{config.yearLabel}</option>
@@ -263,99 +265,97 @@ function SalaryPlanner() {
             </label>
           </div>
         </form>
-        {tab.breakdown && (
-          <div className="breakdown">
-            <h2>Salary Breakdown</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Yearly (£)</th>
-                  <th>Monthly (£)</th>
-                  <th>Weekly (£)</th>
-                  <th>Daily (£)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Gross Income</td>
-                  <td>£{tab.breakdown.gross.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.grossMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.grossWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.grossDaily.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td>Pension</td>
-                  <td>£{tab.breakdown.pension.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.pensionMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.pensionWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.pensionDaily.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td>Extra Salary Sacrifice</td>
-                  <td>£{tab.breakdown.extraSalarySacrifice.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.extraSalarySacrificeMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.extraSalarySacrificeWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.extraSalarySacrificeDaily.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td>Taxable Income</td>
-                  <td>£{tab.breakdown.taxableIncome.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.taxableIncomeMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.taxableIncomeWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.taxableIncomeDaily.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td>Income Tax</td>
-                  <td>£{tab.breakdown.tax.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.taxMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.taxWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.taxDaily.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td colSpan={5}>
-                    <details>
-                      <summary>Tax Breakdown</summary>
-                      <ul>
-                        <li>Personal Allowance: £{tab.breakdown.taxBreakdown.personalAllowance.toLocaleString(undefined, {maximumFractionDigits:2})}</li>
-                        <li>Basic Rate: £{tab.breakdown.taxBreakdown.basic.toLocaleString(undefined, {maximumFractionDigits:2})}</li>
-                        <li>Higher Rate: £{tab.breakdown.taxBreakdown.higher.toLocaleString(undefined, {maximumFractionDigits:2})}</li>
-                        <li>Additional Rate: £{tab.breakdown.taxBreakdown.additional.toLocaleString(undefined, {maximumFractionDigits:2})}</li>
-                      </ul>
-                    </details>
-                  </td>
-                </tr>
-                <tr>
-                  <td>National Insurance</td>
-                  <td>£{tab.breakdown.ni.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.niMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.niWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.niDaily.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td>Student Loan (Plan 2)</td>
-                  <td>£{tab.breakdown.studentLoan.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.studentLoanMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.studentLoanWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                  <td>£{tab.breakdown.studentLoanDaily.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td><strong>Take Home</strong></td>
-                  <td><strong>£{tab.breakdown.takeHome.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td>
-                  <td><strong>£{tab.breakdown.takeHomeMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td>
-                  <td><strong>£{tab.breakdown.takeHomeWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td>
-                  <td><strong>£{tab.breakdown.takeHomeDaily.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td>
-                </tr>
-              </tbody>
-            </table>
-            {tab.inputs.includeHICBC && (
-              <HICBCResult
-                netIncome={tab.breakdown.takeHome + tab.breakdown.tax + tab.breakdown.ni + tab.breakdown.studentLoan}
-                config={taxYearConfig}
-              />
-            )}
-          </div>
-        )}
+        <div className="breakdown">
+          <h2>Salary Breakdown</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Yearly (£)</th>
+                <th>Monthly (£)</th>
+                <th>Weekly (£)</th>
+                <th>Daily (£)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Gross Income</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.gross.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.grossMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.grossWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.grossDaily.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+              </tr>
+              <tr>
+                <td>Pension</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.pension.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.pensionMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.pensionWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.pensionDaily.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+              </tr>
+              <tr>
+                <td>Extra Salary Sacrifice</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.extraSalarySacrifice.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.extraSalarySacrificeMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.extraSalarySacrificeWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.extraSalarySacrificeDaily.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+              </tr>
+              <tr>
+                <td>Taxable Income</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.taxableIncome.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.taxableIncomeMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.taxableIncomeWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.taxableIncomeDaily.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+              </tr>
+              <tr>
+                <td>Income Tax</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.tax.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.taxMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.taxWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.taxDaily.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+              </tr>
+              <tr>
+                <td colSpan={5}>
+                  <details>
+                    <summary>Tax Breakdown</summary>
+                    <ul>
+                      <li>Personal Allowance: {tab.breakdown ? `£${tab.breakdown.taxBreakdown.personalAllowance.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</li>
+                      <li>Basic Rate: {tab.breakdown ? `£${tab.breakdown.taxBreakdown.basic.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</li>
+                      <li>Higher Rate: {tab.breakdown ? `£${tab.breakdown.taxBreakdown.higher.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</li>
+                      <li>Additional Rate: {tab.breakdown ? `£${tab.breakdown.taxBreakdown.additional.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>National Insurance</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.ni.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.niMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.niWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.niDaily.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+              </tr>
+              <tr>
+                <td>Student Loan (Plan 2)</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.studentLoan.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.studentLoanMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.studentLoanWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+                <td>{tab.breakdown ? `£${tab.breakdown.studentLoanDaily.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</td>
+              </tr>
+              <tr>
+                <td><strong>Take Home</strong></td>
+                <td><strong>{tab.breakdown ? `£${tab.breakdown.takeHome.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</strong></td>
+                <td><strong>{tab.breakdown ? `£${tab.breakdown.takeHomeMonthly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</strong></td>
+                <td><strong>{tab.breakdown ? `£${tab.breakdown.takeHomeWeekly.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</strong></td>
+                <td><strong>{tab.breakdown ? `£${tab.breakdown.takeHomeDaily.toLocaleString(undefined, {maximumFractionDigits:2})}` : ''}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          {tab.inputs.includeHICBC && tab.breakdown && (
+            <HICBCResult
+              netIncome={tab.breakdown.takeHome + tab.breakdown.tax + tab.breakdown.ni + tab.breakdown.studentLoan}
+              config={taxYearConfig}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

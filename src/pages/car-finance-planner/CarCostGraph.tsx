@@ -29,7 +29,7 @@ export default function CarCostGraph({ cars }: CarCostGraphProps) {
         color: 'var(--text)'
       }}
     >
-      <h2 style={{ marginBottom: 8, color: 'var(--primary)' }}>Total Cost Forecast (10 Years)</h2>
+      <h2 style={{ marginBottom: 8, color: 'var(--primary)' }}>10 Year Cost Forecast Comparison</h2>
       <svg
         width={width}
         height={height}

@@ -12,6 +12,8 @@ export interface CarFinanceInputs {
   fuelType: FuelType;
   fuelCost: string;
   fuelEfficiency: string;
+  ownershipType?: 'Owned' | 'Lease' | 'PCP' | 'HP';
+  balloonPayment?: string;
 }
 export interface CarTab {
   id: string;
@@ -27,6 +29,7 @@ export type CarFinanceBreakdown = {
   servicing: number;
   insurance: number;
   extra: number;
+  balloonPayment?: number;
   total: number;
 };
 

@@ -14,7 +14,7 @@ const getValue = (val: number, outputUnit: Unit) => outputUnit === 'year' ? val 
 export const CarCostBreakdown: React.FC<CarCostBreakdownProps> = ({ car, outputUnit, setOutputUnit, forecastRows }) => {
   return (
     <div className="breakdown">
-      <h2>Car Cost Breakdown</h2>
+      <h2>Cost Breakdown</h2>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
         <span>Show as</span>
         <button type="button" style={{ minWidth: 70, fontWeight: outputUnit === 'year' ? 700 : 400 }} onClick={() => setOutputUnit('year')}>Yearly</button>
@@ -40,46 +40,40 @@ export const CarCostBreakdown: React.FC<CarCostBreakdownProps> = ({ car, outputU
               </td>
               <td>
                 {car.result ?
-                  getValue(car.result[field as keyof CarFinanceBreakdown], outputUnit).toLocaleString(undefined, { maximumFractionDigits: 2 }) :
+                  getValue((car.result[field as keyof CarFinanceBreakdown] ?? 0), outputUnit).toLocaleString(undefined, { maximumFractionDigits: 2 }) :
                   '-'}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      {/* Forecast Table */}
-      {forecastRows.length > 0 && (
-        <>
-          <h3 style={{ marginTop: '2rem', marginBottom: '1.2rem' }}>Car Cost Forecast</h3>
-          <table style={{ marginTop: '0.5rem' }}>
-            <thead>
-              <tr>
-                <th>Year</th>
-                <th>Residual Value (£)</th>
-                <th>Depreciation (£)</th>
-                <th>Maintenance (£)</th>
-                <th>Finance (£)</th>
-                <th>Year Cost (£)</th>
-                <th>Total Cost (£)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {forecastRows.map((row, index) => (
-                <tr key={row.year}>
-                  <td>{index + 1}</td>
-                  <td>{row.residualValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                  <td>{row.depreciation.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                  <td>{row.maintenance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                  <td>{row.finance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                  <td>{row.cost.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                  <td>{row.totalCost.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      )}
+      <h3 style={{ marginTop: '2rem', marginBottom: '1.2rem' }}>10 Year Cost Forecast</h3>
+        <table style={{ marginTop: '0.5rem' }}>
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Residual Value (£)</th>
+            <th>Depreciation (£)</th>
+            <th>Maintenance (£)</th>
+            <th>Finance (£)</th>
+            <th>Year Cost (£)</th>
+            <th>Total Cost (£)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {forecastRows.map((row, index) => (
+            <tr key={row.year}>
+              <td>{index + 1}</td>
+              <td>{row.residualValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+              <td>{row.depreciation.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+              <td>{row.maintenance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+              <td>{row.finance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+              <td>{row.cost.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+              <td>{row.totalCost.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

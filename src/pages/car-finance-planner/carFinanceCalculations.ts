@@ -39,7 +39,8 @@ export function calculateCarFinanceBreakdown(inputs: CarFinanceInputs): CarFinan
   const servicing = parse(inputs.servicing);
   const insurance = parse(inputs.insurance);
   const extra = inputs.extra ? (inputs.extraUnit === 'month' ? parse(inputs.extra) * MONTHS_PER_YEAR : parse(inputs.extra)) : 0;
-  const total = finance + fuel + roadTax + servicing + insurance + extra;
+  const balloonPayment = inputs.ownershipType === 'PCP' ? parse(inputs.balloonPayment ?? '') : 0;
+  const total = finance + fuel + roadTax + servicing + insurance + extra + balloonPayment;
   return {
     finance,
     fuel,
@@ -47,6 +48,7 @@ export function calculateCarFinanceBreakdown(inputs: CarFinanceInputs): CarFinan
     servicing,
     insurance,
     extra,
+    balloonPayment,
     total,
   };
 }

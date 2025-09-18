@@ -29,10 +29,12 @@ interface CarFormInputs {
   extra: string;
   extraUnit: Unit;
   oneOff: string;
+  ownershipType?: 'Owned' | 'Lease' | 'PCP' | 'HP';
   currentCarValue?: string;
   currentAge?: string;
   currentMileage?: string;
   financeYearsRemaining?: string;
+  balloonPayment?: string;
 }
 interface CarTab {
   id: string;
@@ -67,6 +69,8 @@ export default function CarFinancePlanner() {
       extra: '',
       extraUnit: 'year',
       oneOff: '',
+      ownershipType: 'Owned',
+      balloonPayment: '',
     },
     result: null,
   });
@@ -117,8 +121,9 @@ export default function CarFinancePlanner() {
   // Recalculate result whenever inputs change
   const updateCarResult = (newCars: CarTab[], idx: number) => {
     const car = newCars[idx];
+    const financeValue = car.inputs.ownershipType === 'Owned' ? '0' : car.inputs.finance;
     const breakdown = calculateCarFinanceBreakdown({
-      finance: String(toYearly(car.inputs.finance, car.inputs.financeUnit)),
+      finance: String(toYearly(financeValue, car.inputs.financeUnit)),
       roadTax: String(toYearly(car.inputs.roadTax, car.inputs.roadTaxUnit)),
       servicing: String(toYearly(car.inputs.servicing, car.inputs.servicingUnit)),
       insurance: String(toYearly(car.inputs.insurance, car.inputs.insuranceUnit)),
@@ -128,6 +133,8 @@ export default function CarFinancePlanner() {
       fuelType: car.inputs.fuelType,
       fuelCost: car.inputs.fuelCost,
       fuelEfficiency: car.inputs.fuelEfficiency,
+      ownershipType: car.inputs.ownershipType,
+      balloonPayment: car.inputs.balloonPayment,
     });
     return newCars.map((c, i) => i === idx ? { ...c, result: breakdown } : c);
   };
@@ -140,10 +147,20 @@ export default function CarFinancePlanner() {
 
   const calculateForecastRows = (car: CarTab) => {
     let forecastRows: Array<{ year: number; residualValue: number; maintenance: number; depreciation: number; finance: number; cost: number; totalCost: number }> = [];
-    const currentValue = car.inputs.currentCarValue?.trim() || '';
-    const currentAge = car.inputs.currentAge?.trim() || '';
-    const currentMileage = car.inputs.currentMileage?.trim() || '';
-    const financeYears = car.inputs.financeYearsRemaining?.trim() || '';
+    let currentValue = car.inputs.currentCarValue?.trim() || '';
+    let currentAge = car.inputs.currentAge?.trim() || '';
+    let currentMileage = car.inputs.currentMileage?.trim() || '';
+    let financeYears = car.inputs.financeYearsRemaining?.trim() || '';
+    const forecastLength = 10;
+    if (car.inputs.ownershipType === 'Owned') {
+      financeYears = '0';
+    }
+    if (car.inputs.ownershipType === 'Lease') {
+      currentValue = '0';
+      currentAge = '0';
+      currentMileage = '0';
+      financeYears = String(forecastLength); // Lease always matches forecast length
+    }
     if (
       currentValue !== '' &&
       currentAge !== '' &&
@@ -156,7 +173,7 @@ export default function CarFinancePlanner() {
       const age = Number(currentAge);
       const mileage = Number(currentMileage);
       const years = financeYears !== '' && !isNaN(Number(financeYears)) ? Number(financeYears) : 0;
-      const forecast = forecastCarValues(value, age, 10, mileage);
+      const forecast = forecastCarValues(value, age, forecastLength, mileage);
       let accumulated = 0;
       let prevValue = value;
       const oneOff = car.inputs.oneOff && !isNaN(Number(car.inputs.oneOff)) ? Number(car.inputs.oneOff) : 0;
@@ -164,7 +181,11 @@ export default function CarFinancePlanner() {
         const maintenance = getYearlyMaintenanceCost(car);
         const depreciation = prevValue - row.value;
         prevValue = row.value;
-        const finance = (car.result && idx < years) ? car.result.finance : 0;
+        let finance = (car.result && idx < years) ? car.result.finance : 0;
+        // Add balloon payment at the end of finance years for PCP
+        if (car.inputs.ownershipType === 'PCP' && idx === years - 1) {
+          finance += car.result?.balloonPayment ?? 0;
+        }
         // Add one-off cost only in first year
         const yearCost = maintenance + finance + (idx === 0 ? oneOff : 0);
         accumulated += yearCost;
@@ -189,6 +210,7 @@ export default function CarFinancePlanner() {
         <Link to="/" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 }}>&larr; Back to Home</Link>
       </div>
       <h1>Car Finance Planner</h1>
+      <p>Calculate and compare car finance options, forecast costs, and visualize total ownership over time. Instantly see breakdowns and forecasts as you adjust inputs.</p>
       {/* Tab bar UI */}
       <div className="car-tabs-bar">
         {cars.map((car, idx) => (
@@ -250,8 +272,9 @@ export default function CarFinancePlanner() {
               value={car.label}
               onChange={e => handleTabLabelChange(activeTab, e.target.value)}
               placeholder="e.g. Car 1"
-              style={{ marginBottom: '0.7rem', maxWidth: 200 }}
+              style={{ maxWidth: 200 }}
             />
+            <h3 style={{ marginBottom: '1.2rem' }}>Maintenance Costs</h3>
             <label htmlFor="mileage">Mileage (miles/{car.inputs.mileageUnit})</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
               <input
@@ -284,8 +307,8 @@ export default function CarFinancePlanner() {
               }}
               style={{ marginBottom: '0.5rem', maxWidth: 200 }}
             >
-              <option value="unleaded">Unleaded</option>
               <option value="electric">Electric</option>
+              <option value="unleaded">Unleaded</option>
             </select>
 
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -406,81 +429,126 @@ export default function CarFinancePlanner() {
                 {car.inputs.extraUnit === 'year' ? 'Yearly' : 'Monthly'}
               </button>
             </div>
-            <label htmlFor="finance">Finance (£/{car.inputs.financeUnit})</label>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <input
-                id="finance"
-                type="number"
-                min="0"
-                value={car.inputs.finance}
-                onChange={e => {
-                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, finance: e.target.value } } : c);
-                  setCars(updateCarResult(newCars as CarTab[], activeTab));
-                }}
-                placeholder="e.g. 3000"
-                style={{ flex: 1 }}
-              />
-              <button type="button" aria-label="Toggle finance unit" style={{ minWidth: 70 }} onClick={() => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeUnit: (c.inputs.financeUnit === 'year' ? 'month' : 'year') as Unit } } : c);
+            <h3 style={{ marginBottom: '1.2rem' }}>Residual Costs</h3>
+            <label htmlFor="ownershipType">Ownership Type</label>
+            <select
+              id="ownershipType"
+              value={car.inputs.ownershipType || 'Owned'}
+              onChange={e => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, ownershipType: e.target.value as 'Owned' | 'Lease' | 'PCP' | 'HP' } } : c);
                 setCars(updateCarResult(newCars as CarTab[], activeTab));
-              }}>
-                {car.inputs.financeUnit === 'year' ? 'Yearly' : 'Monthly'}
-              </button>
-            </div>
-            <label htmlFor="currentCarValue">Current Car Value (£)</label>
-            <input
-              id="currentCarValue"
-              type="number"
-              min="0"
-              value={car.inputs.currentCarValue || ''}
-              onChange={e => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentCarValue: e.target.value } } : c);
-                setCars(newCars);
               }}
-              placeholder="e.g. 15000"
               style={{ marginBottom: '0.5rem', maxWidth: 200 }}
-            />
-            <label htmlFor="currentAge">Current Age (years)</label>
-            <input
-              id="currentAge"
-              type="number"
-              min="0"
-              value={car.inputs.currentAge || ''}
-              onChange={e => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentAge: e.target.value } } : c);
-                setCars(newCars);
-              }}
-              placeholder="e.g. 2"
-              style={{ marginBottom: '0.5rem', maxWidth: 200 }}
-            />
-            <label htmlFor="currentMileage">Current Mileage</label>
-            <input
-              id="currentMileage"
-              type="number"
-              min="0"
-              value={car.inputs.currentMileage || ''}
-              onChange={e => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentMileage: e.target.value } } : c);
-                setCars(newCars);
-              }}
-              placeholder="e.g. 30000"
-              style={{ marginBottom: '0.5rem', maxWidth: 200 }}
-            />
-            <label htmlFor="financeYearsRemaining">Finance Years Remaining</label>
-            <input
-              id="financeYearsRemaining"
-              type="number"
-              min="0"
-              max="10"
-              value={car.inputs.financeYearsRemaining || ''}
-              onChange={e => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeYearsRemaining: e.target.value } } : c);
-                setCars(newCars);
-              }}
-              placeholder="e.g. 3"
-              style={{ marginBottom: '0.5rem', maxWidth: 200 }}
-            />
-            <label htmlFor="oneOff">One off cost/saving (£)</label>
+            >
+              <option value="Owned">Owned</option>
+              <option value="Lease">Lease</option>
+              <option value="PCP">PCP</option>
+              <option value="HP">HP</option>
+            </select>
+            {car.inputs.ownershipType !== 'Owned' && (
+              <>
+                <label htmlFor="finance">Finance (£/{car.inputs.financeUnit})</label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    id="finance"
+                    type="number"
+                    min="0"
+                    value={car.inputs.finance}
+                    onChange={e => {
+                      const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, finance: e.target.value } } : c);
+                      setCars(updateCarResult(newCars as CarTab[], activeTab));
+                    }}
+                    placeholder="e.g. 3000"
+                    style={{ flex: 1 }}
+                  />
+                  <button type="button" aria-label="Toggle finance unit" style={{ minWidth: 70 }} onClick={() => {
+                    const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeUnit: (c.inputs.financeUnit === 'year' ? 'month' : 'year') as Unit } } : c);
+                    setCars(updateCarResult(newCars as CarTab[], activeTab));
+                  }}>
+                    {car.inputs.financeUnit === 'year' ? 'Yearly' : 'Monthly'}
+                  </button>
+                </div>
+              </>
+            )}
+            {car.inputs.ownershipType !== 'Owned' && car.inputs.ownershipType !== 'Lease' && (
+              <>
+                <label htmlFor="financeYearsRemaining">Finance Years Remaining</label>
+                <input
+                  id="financeYearsRemaining"
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={car.inputs.financeYearsRemaining || ''}
+                  onChange={e => {
+                    const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeYearsRemaining: e.target.value } } : c);
+                    setCars(updateCarResult(newCars as CarTab[], activeTab));
+                  }}
+                  placeholder="e.g. 3"
+                  style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+                />
+                {car.inputs.ownershipType === 'PCP' && (
+                  <>
+                    <label htmlFor="balloonPayment">Balloon Payment (£ at end of term)</label>
+                    <input
+                      id="balloonPayment"
+                      type="number"
+                      min="0"
+                      value={car.inputs.balloonPayment || ''}
+                      onChange={e => {
+                        const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, balloonPayment: e.target.value } } : c);
+                        setCars(updateCarResult(newCars as CarTab[], activeTab));
+                      }}
+                      placeholder="e.g. 8000"
+                      style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+                    />
+                  </>
+                )}
+              </>
+            )}
+            {car.inputs.ownershipType !== 'Lease' && (
+              <>
+                <label htmlFor="currentCarValue">Current Car Value (£)</label>
+                <input
+                  id="currentCarValue"
+                  type="number"
+                  min="0"
+                  value={car.inputs.currentCarValue || ''}
+                  onChange={e => {
+                    const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentCarValue: e.target.value } } : c);
+                    setCars(updateCarResult(newCars as CarTab[], activeTab));
+                  }}
+                  placeholder="e.g. 15000"
+                  style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+                />
+                <label htmlFor="currentAge">Current Age (years)</label>
+                <input
+                  id="currentAge"
+                  type="number"
+                  min="0"
+                  value={car.inputs.currentAge || ''}
+                  onChange={e => {
+                    const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentAge: e.target.value } } : c);
+                    setCars(updateCarResult(newCars as CarTab[], activeTab));
+                  }}
+                  placeholder="e.g. 2"
+                  style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+                />
+                <label htmlFor="currentMileage">Current Mileage</label>
+                <input
+                  id="currentMileage"
+                  type="number"
+                  min="0"
+                  value={car.inputs.currentMileage || ''}
+                  onChange={e => {
+                    const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, currentMileage: e.target.value } } : c);
+                    setCars(updateCarResult(newCars as CarTab[], activeTab));
+                  }}
+                  placeholder="e.g. 30000"
+                  style={{ marginBottom: '0.5rem', maxWidth: 200 }}
+                />
+              </>
+            )}
+            <label htmlFor="oneOff">One off cost/saving (£) e.g. buying/selling car</label>
             <input
               id="oneOff"
               type="number"
