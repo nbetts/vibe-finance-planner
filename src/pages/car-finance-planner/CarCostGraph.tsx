@@ -19,12 +19,25 @@ export default function CarCostGraph({ cars }: CarCostGraphProps) {
   const yScale = (cost: number) => height - padding - (cost / maxCost) * (height - 2 * padding);
 
   return (
-    <div style={{ marginTop: '2rem', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #0001', padding: 24 }}>
-      <h2 style={{ marginBottom: 8 }}>Total Cost Forecast (10 Years)</h2>
-      <svg width={width} height={height} style={{ background: '#f8f8f8', borderRadius: 8 }}>
+    <div
+      style={{
+        marginTop: '2rem',
+        background: 'var(--surface)',
+        borderRadius: 8,
+        boxShadow: '0 2px 8px 0 rgba(30,41,59,0.04)',
+        padding: 24,
+        color: 'var(--text)'
+      }}
+    >
+      <h2 style={{ marginBottom: 8, color: 'var(--primary)' }}>Total Cost Forecast (10 Years)</h2>
+      <svg
+        width={width}
+        height={height}
+        style={{ background: 'var(--background)', borderRadius: 8 }}
+      >
         {/* Axes */}
-        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#333" strokeWidth={2} />
-        <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#333" strokeWidth={2} />
+        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="var(--border)" strokeWidth={2} />
+        <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="var(--border)" strokeWidth={2} />
         {/* Dashed grid lines for X axis (vertical) */}
         {years.map(year => (
           <line
@@ -33,7 +46,7 @@ export default function CarCostGraph({ cars }: CarCostGraphProps) {
             y1={padding}
             x2={xScale(year)}
             y2={height - padding}
-            stroke="#bbb"
+            stroke="var(--table-row-alt)"
             strokeDasharray="5,5"
             strokeWidth={1}
           />
@@ -46,21 +59,55 @@ export default function CarCostGraph({ cars }: CarCostGraphProps) {
             y1={yScale(f * maxCost)}
             x2={width - padding}
             y2={yScale(f * maxCost)}
-            stroke="#bbb"
+            stroke="var(--table-row-alt)"
             strokeDasharray="5,5"
             strokeWidth={1}
           />
         ))}
         {/* X axis labels */}
         {years.map(year => (
-          <text key={year} x={xScale(year)} y={height - padding + 20} fontSize={13} textAnchor="middle">{year}</text>
+          <text
+            key={year}
+            x={xScale(year)}
+            y={height - padding + 20}
+            fontSize={13}
+            textAnchor="middle"
+            fill="var(--text-light)"
+          >
+            {year}
+          </text>
         ))}
-        <text x={width / 2} y={height - 10} fontSize={15} textAnchor="middle">Years</text>
+        <text
+          x={width / 2}
+          y={height - 10}
+          fontSize={15}
+          textAnchor="middle"
+          fill="var(--text)"
+        >
+          Years
+        </text>
         {/* Y axis labels */}
         {[0, 0.25, 0.5, 0.75, 1].map(f => (
-          <text key={f} x={padding - 10} y={yScale(f * maxCost) + 5} fontSize={13} textAnchor="end">£{Math.round(f * maxCost).toLocaleString()}</text>
+          <text
+            key={f}
+            x={padding - 10}
+            y={yScale(f * maxCost) + 5}
+            fontSize={13}
+            textAnchor="end"
+            fill="var(--text-light)"
+          >
+            £{Math.round(f * maxCost).toLocaleString()}
+          </text>
         ))}
-        <text x={padding - 30} y={padding - 10} fontSize={15} textAnchor="end">Total Cost (£)</text>
+        <text
+          x={padding - 30}
+          y={padding - 10}
+          fontSize={15}
+          textAnchor="end"
+          fill="var(--text)"
+        >
+          Total Cost (£)
+        </text>
         {/* Car lines */}
         {cars.map((car) => (
           <polyline
@@ -72,8 +119,8 @@ export default function CarCostGraph({ cars }: CarCostGraphProps) {
           />
         ))}
       </svg>
-      <div style={{ marginTop: 8, fontSize: 13, color: '#555' }}>
-        <span style={{ marginRight: 16 }}><strong>Key:</strong></span>
+      <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-light)' }}>
+        <span style={{ marginRight: 16 }}><strong style={{ color: 'var(--primary)' }}>Key:</strong></span>
         {cars.map((car) => (
           <span key={car.label} style={{ color: car.color, marginRight: 16 }}>
             &#9632; {car.label}
