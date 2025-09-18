@@ -11,7 +11,7 @@ export function calculateBreakdown(
   config: TaxYearConfig,
   opts?: { includeStudentLoan?: boolean; pensionRate?: number; extraSalarySacrifice?: number }
 ): SalaryBreakdown {
-  const pensionRate = typeof opts?.pensionRate === 'number' ? opts.pensionRate : config.PENSION_RATE;
+  const pensionRate = typeof opts?.pensionRate === 'number' ? opts.pensionRate : 0;
   const extraSalarySacrifice = typeof opts?.extraSalarySacrifice === 'number' ? opts.extraSalarySacrifice : 0;
   const pension = pensionRate > 0 ? gross * pensionRate : 0;
   const totalSalarySacrifice = pension + extraSalarySacrifice;

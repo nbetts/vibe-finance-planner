@@ -34,7 +34,7 @@ function createBlankSalaryTab(label: string): SalaryTab {
       label,
       salary: '',
       includeStudentLoan: true,
-      pensionPercent: '15',
+      pensionPercent: '0',
   extraSalarySacrifice: '0',
   extraSalarySacrificeUnit: 'year',
       taxYearKey: '2025_26',
