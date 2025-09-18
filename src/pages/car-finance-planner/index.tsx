@@ -25,6 +25,8 @@ interface CarFormInputs {
   servicingUnit: Unit;
   insurance: string;
   insuranceUnit: Unit;
+  extra: string;
+  extraUnit: Unit;
   currentCarValue?: string;
   currentAge?: string;
   currentMileage?: string;
@@ -56,6 +58,8 @@ export default function CarFinancePlanner() {
       servicingUnit: 'year',
       insurance: '',
       insuranceUnit: 'year',
+      extra: '',
+      extraUnit: 'year',
     },
     result: null,
   });
@@ -111,6 +115,7 @@ export default function CarFinancePlanner() {
       roadTax: String(toYearly(car.inputs.roadTax, car.inputs.roadTaxUnit)),
       servicing: String(toYearly(car.inputs.servicing, car.inputs.servicingUnit)),
       insurance: String(toYearly(car.inputs.insurance, car.inputs.insuranceUnit)),
+      extra: String(toYearly(car.inputs.extra, car.inputs.extraUnit)),
       mileage: car.inputs.mileage,
       mileageUnit: car.inputs.mileageUnit,
       fuelType: car.inputs.fuelType,
@@ -123,7 +128,7 @@ export default function CarFinancePlanner() {
 
   const getYearlyMaintenanceCost = (carTab: CarTab) => {
     if (!carTab.result) return 0;
-    return carTab.result.roadTax + carTab.result.fuel + carTab.result.servicing + carTab.result.insurance;
+    return carTab.result.roadTax + carTab.result.fuel + carTab.result.servicing + carTab.result.insurance + (carTab.result.extra ?? 0);
   };
 
   let forecastRows: Array<{ year: number; residualValue: number; maintenance: number; depreciation: number; finance: number; cost: number; totalCost: number }> = [];
@@ -386,6 +391,27 @@ export default function CarFinancePlanner() {
                 setCars(updateCarResult(newCars as CarTab[], activeTab));
               }}>
                 {car.inputs.insuranceUnit === 'year' ? 'Yearly' : 'Monthly'}
+              </button>
+            </div>
+            <label htmlFor="extra">Extra costs/savings (£/{car.inputs.extraUnit})</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                id="extra"
+                type="number"
+                min="0"
+                value={car.inputs.extra}
+                onChange={e => {
+                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, extra: e.target.value } } : c);
+                  setCars(updateCarResult(newCars as CarTab[], activeTab));
+                }}
+                placeholder="e.g. 0"
+                style={{ flex: 1 }}
+              />
+              <button type="button" aria-label="Toggle extra unit" style={{ minWidth: 70 }} onClick={() => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, extraUnit: (c.inputs.extraUnit === 'year' ? 'month' : 'year') as Unit } } : c);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
+              }}>
+                {car.inputs.extraUnit === 'year' ? 'Yearly' : 'Monthly'}
               </button>
             </div>
             <label htmlFor="currentCarValue">Current Car Value (£)</label>

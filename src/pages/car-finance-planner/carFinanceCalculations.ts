@@ -38,13 +38,15 @@ export function calculateCarFinanceBreakdown(inputs: CarFinanceInputs): CarFinan
   const roadTax = parse(inputs.roadTax);
   const servicing = parse(inputs.servicing);
   const insurance = parse(inputs.insurance);
-  const total = finance + fuel + roadTax + servicing + insurance;
+  const extra = inputs.extra ? (inputs.extraUnit === 'month' ? parse(inputs.extra) * MONTHS_PER_YEAR : parse(inputs.extra)) : 0;
+  const total = finance + fuel + roadTax + servicing + insurance + extra;
   return {
     finance,
     fuel,
     roadTax,
     servicing,
     insurance,
+    extra,
     total,
   };
 }

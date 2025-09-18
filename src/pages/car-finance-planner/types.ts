@@ -5,6 +5,8 @@ export interface CarFinanceInputs {
   roadTax: string;
   servicing: string;
   insurance: string;
+  extra?: string;
+  extraUnit?: Unit;
   mileage: string;
   mileageUnit: Unit;
   fuelType: FuelType;
@@ -24,6 +26,7 @@ export type CarFinanceBreakdown = {
   roadTax: number;
   servicing: number;
   insurance: number;
+  extra: number;
   total: number;
 };
 
