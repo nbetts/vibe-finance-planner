@@ -12,8 +12,6 @@ interface CarCostBreakdownProps {
 const getValue = (val: number, outputUnit: Unit) => outputUnit === 'year' ? val : val / 12;
 
 export const CarCostBreakdown: React.FC<CarCostBreakdownProps> = ({ car, outputUnit, setOutputUnit, forecastRows }) => {
-  if (!car.result) return null;
-
   return (
     <div className="breakdown">
       <h2>Car Cost Breakdown</h2>

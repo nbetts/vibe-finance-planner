@@ -252,27 +252,6 @@ export default function CarFinancePlanner() {
               placeholder="e.g. Car 1"
               style={{ marginBottom: '0.7rem', maxWidth: 200 }}
             />
-            <label htmlFor="finance">Finance (£/{car.inputs.financeUnit})</label>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <input
-                id="finance"
-                type="number"
-                min="0"
-                value={car.inputs.finance}
-                onChange={e => {
-                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, finance: e.target.value } } : c);
-                  setCars(updateCarResult(newCars as CarTab[], activeTab));
-                }}
-                placeholder="e.g. 3000"
-                style={{ flex: 1 }}
-              />
-              <button type="button" aria-label="Toggle finance unit" style={{ minWidth: 70 }} onClick={() => {
-                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeUnit: (c.inputs.financeUnit === 'year' ? 'month' : 'year') as Unit } } : c);
-                setCars(updateCarResult(newCars as CarTab[], activeTab));
-              }}>
-                {car.inputs.financeUnit === 'year' ? 'Yearly' : 'Monthly'}
-              </button>
-            </div>
             <label htmlFor="mileage">Mileage (miles/{car.inputs.mileageUnit})</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
               <input
@@ -406,7 +385,7 @@ export default function CarFinancePlanner() {
                 {car.inputs.insuranceUnit === 'year' ? 'Yearly' : 'Monthly'}
               </button>
             </div>
-            <label htmlFor="extra">Extra costs/savings (£/{car.inputs.extraUnit})</label>
+            <label htmlFor="extra">Extra costs/savings (£/{car.inputs.extraUnit}) e.g. business miles, HICBC savings</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <input
                 id="extra"
@@ -425,6 +404,27 @@ export default function CarFinancePlanner() {
                 setCars(updateCarResult(newCars as CarTab[], activeTab));
               }}>
                 {car.inputs.extraUnit === 'year' ? 'Yearly' : 'Monthly'}
+              </button>
+            </div>
+            <label htmlFor="finance">Finance (£/{car.inputs.financeUnit})</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                id="finance"
+                type="number"
+                min="0"
+                value={car.inputs.finance}
+                onChange={e => {
+                  const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, finance: e.target.value } } : c);
+                  setCars(updateCarResult(newCars as CarTab[], activeTab));
+                }}
+                placeholder="e.g. 3000"
+                style={{ flex: 1 }}
+              />
+              <button type="button" aria-label="Toggle finance unit" style={{ minWidth: 70 }} onClick={() => {
+                const newCars = cars.map((c, i) => i === activeTab ? { ...c, inputs: { ...c.inputs, financeUnit: (c.inputs.financeUnit === 'year' ? 'month' : 'year') as Unit } } : c);
+                setCars(updateCarResult(newCars as CarTab[], activeTab));
+              }}>
+                {car.inputs.financeUnit === 'year' ? 'Yearly' : 'Monthly'}
               </button>
             </div>
             <label htmlFor="currentCarValue">Current Car Value (£)</label>
